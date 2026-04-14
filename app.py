@@ -121,7 +121,7 @@ async def fetch_domain_status(session: aiohttp.ClientSession, domain: str) -> st
             if resp.status == 200:
                 return "registered"
             if resp.status == 404:
-                return "available"
+                return "likely_available"
             return f"unknown"
     except asyncio.TimeoutError:
         return "unknown"

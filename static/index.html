@@ -184,7 +184,7 @@
       padding: .15rem .55rem; border-radius: 20px;
       font-size: .75rem; font-weight: 600;
     }
-    .status-badge.available { background: var(--green-bg); color: var(--green); }
+    .status-badge.likely_available { background: var(--green-bg); color: var(--green); }
     .status-badge.registered { background: var(--red-bg); color: var(--red); }
     .status-badge.unknown { background: var(--yellow-bg); color: var(--yellow); }
     .status-badge .dot {
@@ -263,7 +263,7 @@
     <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
     <div class="progress-stats">
       <span>Checked <strong id="checkedCount">0</strong> / <strong id="totalCount">0</strong></span>
-      <span>Available <strong id="availCount" style="color:var(--green)">0</strong></span>
+      <span>Likely Available <strong id="availCount" style="color:var(--green)">0</strong></span>
       <span>Registered <strong id="regCount" style="color:var(--red)">0</strong></span>
     </div>
   </div>
@@ -278,9 +278,25 @@
 
     <div class="filters" id="filtersRow">
       <span class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</span>
-      <span class="filter-chip" data-filter="available" onclick="setFilter('available',this)">Available</span>
+      <span class="filter-chip" data-filter="likely_available" onclick="setFilter('likely_available',this)">Likely Available</span>
       <span class="filter-chip" data-filter="registered" onclick="setFilter('registered',this)">Registered</span>
       <span class="filter-chip" data-filter="unknown" onclick="setFilter('unknown',this)">Unknown</span>
+    </div>
+
+    <!-- Keyword position filter -->
+    <div class="search-row" style="gap:.75rem; align-items:center;">
+      <label style="font-size:.8rem;color:var(--muted);white-space:nowrap;">Filter by keyword:</label>
+      <select id="kwFilter" onchange="renderTable()" style="
+        flex:1; max-width:200px; background:var(--surface2); border:1px solid var(--border);
+        border-radius:8px; padding:.45rem .6rem; color:var(--text); font-size:.82rem; outline:none;
+      ">
+        <option value="">All keywords</option>
+      </select>
+      <div class="filters" id="posFilters" style="margin-bottom:0;">
+        <span class="filter-chip active" data-pos="any" onclick="setPosFilter('any',this)">Any position</span>
+        <span class="filter-chip" data-pos="prefix" onclick="setPosFilter('prefix',this)">Keyword first</span>
+        <span class="filter-chip" data-pos="suffix" onclick="setPosFilter('suffix',this)">Keyword last</span>
+      </div>
     </div>
 
     <div class="result-counters" id="resultCounters"></div>
@@ -328,6 +344,8 @@ let keywords = [...DEFAULT_KEYWORDS];
 let results = [];
 let ws = null;
 let currentFilter = "all";
+let currentPosFilter = "any";
+let currentKwFilter = "";
 let sortCol = "score";
 let sortDir = -1; // descending
 let total = 0;
@@ -403,7 +421,7 @@ function startCheck() {
 
     if (msg.type === "result") {
       results.push(msg.item);
-      if (msg.item.status === "available") availableCount++;
+      if (msg.item.status === "likely_available") availableCount++;
       if (msg.item.status === "registered") registeredCount++;
 
       document.getElementById("checkedCount").textContent = msg.checked;
@@ -440,13 +458,21 @@ function onDone() {
   document.getElementById("startBtn").disabled = false;
   document.getElementById("stopBtn").style.display = "none";
   document.getElementById("progressFill").style.width = "100%";
+  populateKwDropdown();
   renderTable();
 }
 
 // ── Filtering & Sorting ──────────────────────────────────────────────
 function setFilter(filter, el) {
   currentFilter = filter;
-  document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+  document.querySelectorAll("#filtersRow .filter-chip").forEach(c => c.classList.remove("active"));
+  el.classList.add("active");
+  renderTable();
+}
+
+function setPosFilter(pos, el) {
+  currentPosFilter = pos;
+  document.querySelectorAll("#posFilters .filter-chip").forEach(c => c.classList.remove("active"));
   el.classList.add("active");
   renderTable();
 }
@@ -465,11 +491,28 @@ function sortBy(col) {
   renderTable();
 }
 
+function populateKwDropdown() {
+  const select = document.getElementById("kwFilter");
+  const usedWords = new Set();
+  results.forEach(r => { usedWords.add(r.word1); usedWords.add(r.word2); });
+  const sorted = [...usedWords].sort();
+  const prev = select.value;
+  select.innerHTML = '<option value="">All keywords</option>' +
+    sorted.map(w => `<option value="${w}"${w === prev ? ' selected' : ''}>${w}</option>`).join("");
+}
+
 function renderTable() {
   const search = document.getElementById("searchInput").value.toLowerCase();
+  currentKwFilter = document.getElementById("kwFilter").value;
   let filtered = results.filter(r => {
     if (currentFilter !== "all" && r.status !== currentFilter) return false;
     if (search && !r.domain.includes(search) && !r.word1.includes(search) && !r.word2.includes(search)) return false;
+    if (currentKwFilter) {
+      const hasWord = r.word1 === currentKwFilter || r.word2 === currentKwFilter;
+      if (!hasWord) return false;
+      if (currentPosFilter === "prefix" && !r.name.startsWith(currentKwFilter)) return false;
+      if (currentPosFilter === "suffix" && !r.name.endsWith(currentKwFilter)) return false;
+    }
     return true;
   });
 
@@ -493,12 +536,12 @@ function renderTable() {
 
   // Counters
   const allCount = results.length;
-  const avail = results.filter(r => r.status === "available").length;
+  const avail = results.filter(r => r.status === "likely_available").length;
   const reg = results.filter(r => r.status === "registered").length;
   const unk = results.filter(r => r.status === "unknown").length;
   document.getElementById("resultCounters").innerHTML = `
     <span class="counter-item"><strong>${allCount}</strong> total</span>
-    <span class="counter-item"><strong style="color:var(--green)">${avail}</strong> available</span>
+    <span class="counter-item"><strong style="color:var(--green)">${avail}</strong> likely available</span>
     <span class="counter-item"><strong style="color:var(--red)">${reg}</strong> registered</span>
     <span class="counter-item"><strong style="color:var(--yellow)">${unk}</strong> unknown</span>
     <span class="counter-item"><strong>${filtered.length}</strong> shown</span>
@@ -518,8 +561,9 @@ function renderTable() {
   const maxScore = Math.max(...results.map(r => r.score), 1);
 
   tbody.innerHTML = filtered.map(r => {
-    const statusClass = r.status === "available" ? "available"
+    const statusClass = r.status === "likely_available" ? "likely_available"
       : r.status === "registered" ? "registered" : "unknown";
+    const statusLabel = r.status === "likely_available" ? "likely available" : r.status;
     const pct = Math.max(0, Math.round((r.score / maxScore) * 100));
     return `<tr>
       <td>${r._rank}</td>
@@ -530,7 +574,7 @@ function renderTable() {
           ${r.score}
         </span>
       </td>
-      <td><span class="status-badge ${statusClass}"><span class="dot"></span>${r.status}</span></td>
+      <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
       <td><span class="word-chip">${r.word1}</span><span class="word-chip">${r.word2}</span></td>
       <td>${r.name.length}</td>
     </tr>`;
