@@ -50,9 +50,10 @@ def load_cache() -> Dict[str, str]:
 
 
 def save_cache(cache: Dict[str, str]) -> None:
-    tmp = f"{CACHE_FILE}.tmp"
-    Path(tmp).write_text(json.dumps(cache, indent=2, sort_keys=True), encoding="utf-8")
-    Path(tmp).replace(CACHE_FILE)
+    try:
+        Path(CACHE_FILE).write_text(json.dumps(cache, indent=2, sort_keys=True), encoding="utf-8")
+    except Exception as e:
+        print(f"[WARN] Failed to save cache: {e}")
 
 
 # ── Domain logic (reused from original script) ─────────────────────────
@@ -167,13 +168,14 @@ async def ws_check(ws: WebSocket):
                 async with semaphore:
                     item["status"] = await fetch_domain_status(session, domain)
                     item["source"] = "live"
-                    async with lock:
-                        cache[domain] = item["status"]
 
             async with lock:
+                cache[domain] = item["status"]
                 checked += 1
                 item["rank"] = checked
                 results.append(item)
+                if checked % 25 == 0:
+                    save_cache(cache)
 
             await ws.send_json({"type": "result", "item": item, "checked": checked})
 
