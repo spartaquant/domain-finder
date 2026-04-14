@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+domain_status_cache.json
+domain_status_cache.json.tmp
+venv/
+.venv/
