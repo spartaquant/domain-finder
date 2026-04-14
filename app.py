@@ -14,7 +14,8 @@ app = FastAPI()
 
 # ── Config ──────────────────────────────────────────────────────────────
 RDAP_URL = "https://rdap.verisign.com/com/v1/domain/{}"
-CACHE_FILE = "domain_status_cache.json"
+APP_DIR = Path(__file__).resolve().parent
+CACHE_FILE = str(APP_DIR / "domain_status_cache.json")
 MIN_LEN = 4
 MAX_LEN = 14
 REQUEST_TIMEOUT = 8
