@@ -79,6 +79,13 @@
       transition: .15s;
     }
     .kw-tag:hover .remove { opacity: 1; color: var(--red); }
+    .kw-tag.kw-match {
+      background: rgba(251,191,36,.15);
+      border-color: var(--yellow);
+      color: var(--yellow);
+      box-shadow: 0 0 0 1px rgba(251,191,36,.3);
+    }
+    .kw-tag.kw-dim { opacity: .25; }
 
     .kw-input-row { display: flex; gap: .5rem; }
     .kw-input-row input {
@@ -209,6 +216,55 @@
     }
     .empty-state p { margin-bottom: .5rem; }
 
+    /* ── Multiselect ───────────────────────────────────────── */
+    .multiselect { position: relative; min-width: 280px; flex: 1; max-width: 600px; }
+    .ms-trigger {
+      width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: .3rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: .35rem .5rem; min-height: 38px;
+      color: var(--text); font-size: .82rem; cursor: text;
+      font-family: inherit; outline: none; transition: border .15s;
+    }
+    .ms-trigger:hover, .ms-trigger.focused { border-color: var(--accent); }
+    .ms-placeholder { color: var(--muted); padding: 0 .25rem; }
+    .ms-tag {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.3);
+      color: var(--accent-glow);
+      padding: .15rem .45rem; border-radius: 5px; font-size: .78rem;
+      font-weight: 500;
+    }
+    .ms-tag .ms-tag-x {
+      cursor: pointer; opacity: .7; font-size: .85rem; line-height: 1;
+      transition: opacity .1s;
+    }
+    .ms-tag .ms-tag-x:hover { opacity: 1; color: var(--red); }
+    .ms-input {
+      flex: 1; min-width: 80px; background: transparent; border: none;
+      color: var(--text); font-size: .82rem; outline: none; padding: .2rem;
+      font-family: inherit;
+    }
+    .ms-dropdown {
+      display: none;
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      min-width: 240px; z-index: 100;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: .35rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    }
+    .ms-dropdown.active { display: block; }
+    .ms-options {
+      max-height: 260px; overflow-y: auto;
+    }
+    .ms-option {
+      display: block; padding: .5rem .7rem; border-radius: 5px; cursor: pointer;
+      font-size: .85rem; color: var(--text);
+      transition: background .1s;
+    }
+    .ms-option:hover, .ms-option.highlighted { background: rgba(99,102,241,.15); color: var(--accent-glow); }
+    .ms-option.selected { opacity: .4; pointer-events: none; }
+    .ms-empty { padding: 1rem; text-align: center; color: var(--muted); font-size: .82rem; }
+
     /* ── Counters ──────────────────────────────────────────── */
     .result-counters {
       display: flex; gap: 1rem; margin-bottom: 1rem; font-size: .82rem;
@@ -272,9 +328,6 @@
   <div class="card" id="resultsCard" style="display:none;">
     <div class="card-title">Results</div>
 
-    <div class="search-row">
-      <input type="text" id="searchInput" placeholder="Search domains…" oninput="renderTable()" />
-    </div>
 
     <div class="filters" id="filtersRow">
       <span class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</span>
@@ -284,14 +337,23 @@
     </div>
 
     <!-- Keyword position filter -->
-    <div class="search-row" style="gap:.75rem; align-items:center;">
-      <label style="font-size:.8rem;color:var(--muted);white-space:nowrap;">Filter by keyword:</label>
-      <select id="kwFilter" onchange="renderTable()" style="
-        flex:1; max-width:200px; background:var(--surface2); border:1px solid var(--border);
-        border-radius:8px; padding:.45rem .6rem; color:var(--text); font-size:.82rem; outline:none;
-      ">
-        <option value="">All keywords</option>
-      </select>
+    <div class="search-row" style="gap:.75rem; align-items:center; flex-wrap:wrap;">
+      <label style="font-size:.8rem;color:var(--muted);white-space:nowrap;">Filter by keywords:</label>
+
+      <div class="multiselect" id="kwMultiselect">
+        <div class="ms-trigger" id="msTrigger" onclick="focusMsInput(event)">
+          <div id="msTags" style="display:contents;"></div>
+          <input type="text" id="msSearch" class="ms-input"
+                 placeholder="Select keywords…"
+                 oninput="onMsInput()"
+                 onkeydown="onMsKeydown(event)"
+                 onfocus="openMultiselect()" />
+        </div>
+        <div class="ms-dropdown" id="msDropdown">
+          <div class="ms-options" id="msOptions"></div>
+        </div>
+      </div>
+
       <div class="filters" id="posFilters" style="margin-bottom:0;">
         <span class="filter-chip active" data-pos="any" onclick="setPosFilter('any',this)">Any position</span>
         <span class="filter-chip" data-pos="prefix" onclick="setPosFilter('prefix',this)">Keyword first</span>
@@ -345,7 +407,8 @@ let results = [];
 let ws = null;
 let currentFilter = "all";
 let currentPosFilter = "any";
-let currentKwFilter = "";
+let selectedKeywords = new Set();
+let availableKeywords = [];
 let sortCol = "score";
 let sortDir = -1; // descending
 let total = 0;
@@ -359,9 +422,32 @@ function renderKeywords() {
   const unique = [...new Set(keywords.map(k => k.trim().toLowerCase()).filter(Boolean))];
   keywords = unique;
   area.innerHTML = unique.map(k =>
-    `<span class="kw-tag">${k}<span class="remove" onclick="removeKeyword('${k}')">&times;</span></span>`
+    `<span class="kw-tag" data-kw="${k}">${k}<span class="remove" onclick="removeKeyword('${k}')">&times;</span></span>`
   ).join("");
   document.getElementById("kwCount").textContent = `${unique.length} keywords`;
+  highlightMatchingKeywords();
+}
+
+function highlightMatchingKeywords() {
+  const input = document.getElementById("kwInput");
+  if (!input) return;
+  const terms = input.value
+    .toLowerCase()
+    .split(",")
+    .map(t => t.trim())
+    .filter(Boolean);
+  const tags = document.querySelectorAll("#keywordsArea .kw-tag");
+
+  if (terms.length === 0) {
+    tags.forEach(t => { t.classList.remove("kw-match", "kw-dim"); });
+    return;
+  }
+  tags.forEach(t => {
+    const kw = t.dataset.kw || "";
+    const isMatch = terms.some(term => kw.includes(term));
+    t.classList.toggle("kw-match", isMatch);
+    t.classList.toggle("kw-dim", !isMatch);
+  });
 }
 
 function removeKeyword(word) {
@@ -385,6 +471,11 @@ function resetKeywords() {
 document.getElementById("kwInput").addEventListener("keydown", e => {
   if (e.key === "Enter") addKeywords();
 });
+document.getElementById("kwInput").addEventListener("input", highlightMatchingKeywords);
+document.getElementById("kwInput").addEventListener("blur", () => {
+  // Clear highlight when input loses focus and is empty
+  if (!document.getElementById("kwInput").value) highlightMatchingKeywords();
+});
 
 // ── WebSocket Check ───────────────────────────────────────────────────
 function startCheck() {
@@ -397,6 +488,7 @@ function startCheck() {
   document.getElementById("stopBtn").style.display = "";
   document.getElementById("progressWrap").classList.add("active");
   document.getElementById("resultsCard").style.display = "";
+  populateKwDropdown();
   document.getElementById("tableBody").innerHTML = "";
   document.getElementById("checkedCount").textContent = "0";
   document.getElementById("totalCount").textContent = "…";
@@ -419,21 +511,18 @@ function startCheck() {
       document.getElementById("totalCount").textContent = total;
     }
 
-    if (msg.type === "result") {
-      results.push(msg.item);
-      if (msg.item.status === "likely_available") availableCount++;
-      if (msg.item.status === "registered") registeredCount++;
-
+    if (msg.type === "batch") {
+      for (const item of msg.items) {
+        results.push(item);
+        if (item.status === "likely_available") availableCount++;
+        if (item.status === "registered") registeredCount++;
+      }
       document.getElementById("checkedCount").textContent = msg.checked;
       document.getElementById("availCount").textContent = availableCount;
       document.getElementById("regCount").textContent = registeredCount;
       document.getElementById("progressFill").style.width =
         `${Math.round((msg.checked / total) * 100)}%`;
-
-      // Live-update table every 10 results for performance
-      if (results.length % 10 === 0 || results.length < 30) {
-        renderTable();
-      }
+      renderTable();
     }
 
     if (msg.type === "done") {
@@ -491,27 +580,132 @@ function sortBy(col) {
   renderTable();
 }
 
+let msHighlightIdx = -1;
+
 function populateKwDropdown() {
-  const select = document.getElementById("kwFilter");
-  const usedWords = new Set();
-  results.forEach(r => { usedWords.add(r.word1); usedWords.add(r.word2); });
-  const sorted = [...usedWords].sort();
-  const prev = select.value;
-  select.innerHTML = '<option value="">All keywords</option>' +
-    sorted.map(w => `<option value="${w}"${w === prev ? ' selected' : ''}>${w}</option>`).join("");
+  availableKeywords = [...keywords].sort();
+  renderMsTags();
+  renderMsOptions();
 }
 
+function renderMsTags() {
+  const tagsEl = document.getElementById("msTags");
+  if (!tagsEl) return;
+  const search = document.getElementById("msSearch");
+  tagsEl.innerHTML = [...selectedKeywords].map(w =>
+    `<span class="ms-tag">${w}<span class="ms-tag-x" onclick="event.stopPropagation();removeKw('${w}')">&times;</span></span>`
+  ).join("");
+  if (selectedKeywords.size === 0 && search && document.activeElement !== search) {
+    // show placeholder (native)
+  }
+}
+
+function renderMsOptions() {
+  const searchEl = document.getElementById("msSearch");
+  const search = (searchEl && searchEl.value || "").toLowerCase();
+  const container = document.getElementById("msOptions");
+  const filtered = availableKeywords
+    .filter(w => !selectedKeywords.has(w))
+    .filter(w => w.includes(search));
+  if (msHighlightIdx >= filtered.length) msHighlightIdx = filtered.length - 1;
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="ms-empty">No keywords match</div>';
+    return;
+  }
+  container.innerHTML = filtered.map((w, i) => {
+    const cls = i === msHighlightIdx ? "ms-option highlighted" : "ms-option";
+    return `<div class="${cls}" onclick="event.stopPropagation();addKw('${w}')">${w}</div>`;
+  }).join("");
+}
+
+function addKw(w) {
+  selectedKeywords.add(w);
+  document.getElementById("msSearch").value = "";
+  msHighlightIdx = 0;
+  renderMsTags();
+  renderMsOptions();
+  renderTable();
+  document.getElementById("msSearch").focus();
+}
+
+function removeKw(w) {
+  selectedKeywords.delete(w);
+  renderMsTags();
+  renderMsOptions();
+  renderTable();
+}
+
+function onMsInput() {
+  msHighlightIdx = 0;
+  openMultiselect();
+  renderMsOptions();
+}
+
+function onMsKeydown(e) {
+  const searchEl = document.getElementById("msSearch");
+  const filtered = availableKeywords
+    .filter(w => !selectedKeywords.has(w))
+    .filter(w => w.includes(searchEl.value.toLowerCase()));
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    msHighlightIdx = Math.min(msHighlightIdx + 1, filtered.length - 1);
+    renderMsOptions();
+    scrollHighlightIntoView();
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    msHighlightIdx = Math.max(msHighlightIdx - 1, 0);
+    renderMsOptions();
+    scrollHighlightIntoView();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (filtered[msHighlightIdx]) addKw(filtered[msHighlightIdx]);
+  } else if (e.key === "Backspace" && searchEl.value === "" && selectedKeywords.size > 0) {
+    const last = [...selectedKeywords].pop();
+    removeKw(last);
+  } else if (e.key === "Escape") {
+    closeMultiselect();
+    searchEl.blur();
+  }
+}
+
+function scrollHighlightIntoView() {
+  const el = document.querySelector(".ms-option.highlighted");
+  if (el) el.scrollIntoView({ block: "nearest" });
+}
+
+function openMultiselect() {
+  document.getElementById("msDropdown").classList.add("active");
+  document.getElementById("msTrigger").classList.add("focused");
+  msHighlightIdx = 0;
+  renderMsOptions();
+}
+
+function closeMultiselect() {
+  document.getElementById("msDropdown").classList.remove("active");
+  document.getElementById("msTrigger").classList.remove("focused");
+}
+
+function focusMsInput(e) {
+  if (e.target.classList.contains("ms-tag-x")) return;
+  document.getElementById("msSearch").focus();
+}
+
+document.addEventListener("click", (e) => {
+  const ms = document.getElementById("kwMultiselect");
+  if (ms && !ms.contains(e.target)) closeMultiselect();
+});
+
 function renderTable() {
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  currentKwFilter = document.getElementById("kwFilter").value;
   let filtered = results.filter(r => {
     if (currentFilter !== "all" && r.status !== currentFilter) return false;
-    if (search && !r.domain.includes(search) && !r.word1.includes(search) && !r.word2.includes(search)) return false;
-    if (currentKwFilter) {
-      const hasWord = r.word1 === currentKwFilter || r.word2 === currentKwFilter;
-      if (!hasWord) return false;
-      if (currentPosFilter === "prefix" && !r.name.startsWith(currentKwFilter)) return false;
-      if (currentPosFilter === "suffix" && !r.name.endsWith(currentKwFilter)) return false;
+    if (selectedKeywords.size > 0) {
+      // Match if either word1 or word2 is in the selected set (OR logic)
+      const matchWord = selectedKeywords.has(r.word1) ? r.word1
+        : selectedKeywords.has(r.word2) ? r.word2 : null;
+      if (!matchWord) return false;
+      if (currentPosFilter === "prefix" && !r.name.startsWith(matchWord)) return false;
+      if (currentPosFilter === "suffix" && !r.name.endsWith(matchWord)) return false;
     }
     return true;
   });
@@ -583,6 +777,7 @@ function renderTable() {
 
 // ── Init ──────────────────────────────────────────────────────────────
 renderKeywords();
+populateKwDropdown();
 sortBy("score");
 </script>
 </body>
