@@ -139,55 +139,96 @@ async def ws_check(ws: WebSocket):
     try:
         data = await ws.receive_json()
         keywords: List[str] = data.get("keywords", DEFAULT_KEYWORDS)
+        recheck_unknown: bool = bool(data.get("recheck_unknown", False))
         candidates = generate_candidates(keywords)
+        cache_preview = load_cache()
+
+        def is_cache_hit(status):
+            if not status:
+                return False
+            if recheck_unknown and status.startswith("unknown"):
+                return False
+            return True
+
+        cached_count = sum(
+            1 for c in candidates
+            if is_cache_hit(cache_preview.get(c["domain"]))
+        )
 
         await ws.send_json({
             "type": "init",
             "total": len(candidates),
+            "cached": cached_count,
+            "to_fetch": len(candidates) - cached_count,
             "keywords_used": len(normalize_keywords(keywords)),
         })
 
         cache = load_cache()
         net_semaphore = asyncio.Semaphore(CONCURRENCY)
-        checked = 0
-        results: list[dict] = []
-        pending_batch: list[dict] = []
-        lock = asyncio.Lock()
         send_lock = asyncio.Lock()
         disconnected = False
 
         timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT + 2)
         connector = aiohttp.TCPConnector(limit=CONCURRENCY * 2, limit_per_host=CONCURRENCY)
 
+        async def safe_send(payload: dict) -> None:
+            nonlocal disconnected
+            if disconnected:
+                return
+            async with send_lock:
+                try:
+                    await ws.send_json(payload)
+                except Exception:
+                    disconnected = True
+
+        # ── Split candidates: cached (instant) vs needs live lookup ──────
+        cached_items: list[dict] = []
+        to_fetch: list[dict] = []
+        rank = 0
+        for item in candidates:
+            cached = cache.get(item["domain"])
+            if is_cache_hit(cached):
+                rank += 1
+                item["rank"] = rank
+                item["status"] = cached
+                item["source"] = "cache"
+                cached_items.append(item)
+            else:
+                to_fetch.append(item)
+
+        # Send all cached results in one bulk message (fast)
+        if cached_items:
+            await safe_send({
+                "type": "batch",
+                "items": cached_items,
+                "checked": len(cached_items),
+            })
+
+        # ── Stream live lookups ──────────────────────────────────────────
+        checked = len(cached_items)
+        pending_batch: list[dict] = []
+        lock = asyncio.Lock()
+
         async def flush_batch():
-            nonlocal pending_batch, disconnected
-            if not pending_batch or disconnected:
+            nonlocal pending_batch
+            if not pending_batch:
                 return
             batch_to_send = pending_batch
             pending_batch = []
-            async with send_lock:
-                try:
-                    await ws.send_json({
-                        "type": "batch",
-                        "items": batch_to_send,
-                        "checked": checked,
-                    })
-                except Exception:
-                    disconnected = True
+            await safe_send({
+                "type": "batch",
+                "items": batch_to_send,
+                "checked": checked,
+            })
 
         async def check_and_report(item: dict):
             nonlocal checked
             if disconnected:
                 return
             domain = item["domain"]
-            cached = cache.get(domain)
-            if cached and cached not in ("unknown", "unknown_timeout"):
-                item["status"] = cached
-                item["source"] = "cache"
-            else:
-                async with net_semaphore:
-                    item["status"] = await fetch_domain_status(session, domain)
-                    item["source"] = "live"
+            async with net_semaphore:
+                item["status"] = await fetch_domain_status(session, domain)
+                item["source"] = "live"
 
             should_save = False
             should_flush = False
@@ -195,7 +236,6 @@ async def ws_check(ws: WebSocket):
                 cache[domain] = item["status"]
                 checked += 1
                 item["rank"] = checked
-                results.append(item)
                 pending_batch.append(item)
                 if checked % 50 == 0:
                     should_save = True
@@ -208,17 +248,12 @@ async def ws_check(ws: WebSocket):
                 await flush_batch()
 
         async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
-            tasks = [check_and_report(c) for c in candidates]
+            tasks = [check_and_report(c) for c in to_fetch]
             await asyncio.gather(*tasks, return_exceptions=True)
 
         await flush_batch()
         save_cache(cache)
-        if not disconnected:
-            async with send_lock:
-                try:
-                    await ws.send_json({"type": "done", "total_checked": checked})
-                except Exception:
-                    pass
+        await safe_send({"type": "done", "total_checked": checked})
 
     except WebSocketDisconnect:
         pass

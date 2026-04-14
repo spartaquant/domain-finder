@@ -211,6 +211,22 @@
       background: linear-gradient(90deg, var(--accent), #a855f7);
     }
 
+    /* ── Actions ───────────────────────────────────────────── */
+    .action-btns { display: inline-flex; gap: .35rem; }
+    .icon-btn {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: .25rem .55rem; border-radius: 6px;
+      font-size: .72rem; font-weight: 500; cursor: pointer;
+      text-decoration: none; transition: .15s;
+      font-family: inherit;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent-glow); }
+    .icon-btn.primary { background: rgba(249,115,22,.12); border-color: rgba(249,115,22,.35); color: #fb923c; }
+    .icon-btn.primary:hover { background: rgba(249,115,22,.2); border-color: #fb923c; }
+    .icon-btn svg { width: 12px; height: 12px; }
+    .copied-flash { color: var(--green) !important; }
+
     .empty-state {
       text-align: center; padding: 3rem 1rem; color: var(--muted);
     }
@@ -311,6 +327,9 @@
       Generate &amp; Check Domains
     </button>
     <button class="btn btn-secondary btn-sm" id="stopBtn" style="display:none" onclick="stopCheck()">Stop</button>
+    <button class="btn btn-secondary btn-sm" id="recheckBtn" onclick="startCheck(true)" title="Retry unknown-status domains">
+      Recheck unknowns
+    </button>
     <span id="kwCount" style="font-size:.82rem;color:var(--muted);"></span>
   </div>
 
@@ -326,8 +345,28 @@
 
   <!-- Results Card -->
   <div class="card" id="resultsCard" style="display:none;">
-    <div class="card-title">Results</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem;">
+      <div class="card-title" style="margin-bottom:0;">Results</div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <span style="font-size:.75rem;color:var(--muted);">Register with:</span>
+        <div class="filters" id="regChoices" style="margin-bottom:0;">
+          <span class="filter-chip reg-choice" data-reg="cloudflare" onclick="setRegistrar('cloudflare')">Cloudflare</span>
+          <span class="filter-chip reg-choice" data-reg="aws" onclick="setRegistrar('aws')">AWS</span>
+          <span class="filter-chip reg-choice" data-reg="godaddy" onclick="setRegistrar('godaddy')">GoDaddy</span>
+        </div>
+      </div>
+    </div>
 
+
+    <!-- Domain text search -->
+    <div class="search-row">
+      <input type="text" id="domSearch" placeholder="Search domain name (e.g. 'alpha', 'forge', '.com')…"
+             oninput="scheduleRender()" style="
+        flex:1; background:var(--surface2); border:1px solid var(--border);
+        border-radius:8px; padding:.5rem .75rem;
+        color:var(--text); font-size:.85rem; outline:none;
+      " />
+    </div>
 
     <div class="filters" id="filtersRow">
       <span class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</span>
@@ -373,6 +412,7 @@
             <th onclick="sortBy('status')">Status <span class="sort-arrow" id="sort-status"></span></th>
             <th>Words</th>
             <th onclick="sortBy('length')">Length <span class="sort-arrow" id="sort-length"></span></th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -478,7 +518,7 @@ document.getElementById("kwInput").addEventListener("blur", () => {
 });
 
 // ── WebSocket Check ───────────────────────────────────────────────────
-function startCheck() {
+function startCheck(recheckUnknown = false) {
   results = [];
   availableCount = 0;
   registeredCount = 0;
@@ -500,7 +540,7 @@ function startCheck() {
   ws = new WebSocket(`${proto}//${location.host}/ws/check`);
 
   ws.onopen = () => {
-    ws.send(JSON.stringify({ keywords }));
+    ws.send(JSON.stringify({ keywords, recheck_unknown: recheckUnknown }));
   };
 
   ws.onmessage = (ev) => {
@@ -522,7 +562,7 @@ function startCheck() {
       document.getElementById("regCount").textContent = registeredCount;
       document.getElementById("progressFill").style.width =
         `${Math.round((msg.checked / total) * 100)}%`;
-      renderTable();
+      scheduleRender();
     }
 
     if (msg.type === "done") {
@@ -697,8 +737,11 @@ document.addEventListener("click", (e) => {
 });
 
 function renderTable() {
+  const domSearchEl = document.getElementById("domSearch");
+  const domSearch = (domSearchEl && domSearchEl.value || "").trim().toLowerCase();
   let filtered = results.filter(r => {
     if (currentFilter !== "all" && r.status !== currentFilter) return false;
+    if (domSearch && !r.domain.includes(domSearch) && !r.name.includes(domSearch)) return false;
     if (selectedKeywords.size > 0) {
       // Match if either word1 or word2 is in the selected set (OR logic)
       const matchWord = selectedKeywords.has(r.word1) ? r.word1
@@ -771,13 +814,113 @@ function renderTable() {
       <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
       <td><span class="word-chip">${r.word1}</span><span class="word-chip">${r.word2}</span></td>
       <td>${r.name.length}</td>
+      <td>${renderActions(r)}</td>
     </tr>`;
   }).join("");
+}
+
+// ── Actions ──────────────────────────────────────────────────────────
+const REGISTRARS = {
+  cloudflare: {
+    name: "Cloudflare",
+    // Deep link via the ?to= redirect, using :account placeholder which
+    // Cloudflare resolves to the active account after login.
+    url: d => `https://dash.cloudflare.com/?to=/:account/domains/registrations/purchase?query=${d}`,
+    copyOnClick: true,
+    color: "#f38020",
+  },
+  aws: {
+    name: "AWS",
+    url: d => `https://us-east-1.console.aws.amazon.com/route53/domains/home#/DomainSearch?domain=${d}`,
+    color: "#ff9900",
+  },
+  godaddy: {
+    name: "GoDaddy",
+    url: d => `https://www.godaddy.com/domainsearch/find?domainToCheck=${d}`,
+    color: "#1bdbdb",
+  },
+};
+
+function currentRegistrar() {
+  return localStorage.getItem("registrar") || "cloudflare";
+}
+
+function setRegistrar(key) {
+  localStorage.setItem("registrar", key);
+  document.querySelectorAll(".reg-choice").forEach(el =>
+    el.classList.toggle("active", el.dataset.reg === key));
+  renderTable();
+}
+
+function renderActions(r) {
+  const copyBtn = `<button class="icon-btn" onclick="copyDomain('${r.domain}',this)" title="Copy domain">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    Copy
+  </button>`;
+
+  if (r.status === "registered") {
+    // Show "Visit" button instead of register
+    return `<div class="action-btns">
+      ${copyBtn}
+      <a class="icon-btn" href="https://${r.domain}" target="_blank" rel="noopener" title="Open ${r.domain}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Visit
+      </a>
+    </div>`;
+  }
+
+  // Available / unknown: show register button for current registrar
+  const regKey = currentRegistrar();
+  const reg = REGISTRARS[regKey];
+  const title = reg.copyOnClick
+    ? `Copy ${r.domain} and open ${reg.name}`
+    : `Register ${r.domain} on ${reg.name}`;
+  return `<div class="action-btns">
+    ${copyBtn}
+    <a class="icon-btn primary" href="${reg.url(r.domain)}" target="_blank" rel="noopener"
+       onclick="handleRegisterClick(event, '${r.domain}', '${regKey}')" title="${title}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+      ${reg.name}
+    </a>
+  </div>`;
+}
+
+function handleRegisterClick(e, domain, regKey) {
+  const reg = REGISTRARS[regKey];
+  if (reg.copyOnClick) {
+    // Copy the domain so the user can paste it into the CF search box
+    navigator.clipboard.writeText(domain).catch(() => {});
+  }
+  // Let the <a> navigate normally (target="_blank")
+}
+
+function copyDomain(domain, btn) {
+  navigator.clipboard.writeText(domain).then(() => {
+    const original = btn.innerHTML;
+    btn.classList.add("copied-flash");
+    btn.innerHTML = "✓ Copied";
+    setTimeout(() => {
+      btn.classList.remove("copied-flash");
+      btn.innerHTML = original;
+    }, 1200);
+  });
+}
+
+// ── Throttled render (prevents UI stalls on bulk batches) ────────────
+let renderScheduled = false;
+function scheduleRender() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => {
+    renderScheduled = false;
+    renderTable();
+  });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────
 renderKeywords();
 populateKwDropdown();
+setRegistrar(currentRegistrar());
 sortBy("score");
 </script>
 </body>
