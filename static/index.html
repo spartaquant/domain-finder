@@ -62,6 +62,7 @@
     header h1 span { color: var(--muted); font-weight: 400; font-size: .9rem; margin-left: .5rem; }
 
     /* ── Cards ─────────────────────────────────────────────── */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -69,6 +70,7 @@
       padding: 1.5rem 1.75rem;
       margin-bottom: 1.5rem;
       box-shadow: 0 1px 3px rgba(0,0,0,.2), 0 0 0 1px rgba(255,255,255,.02) inset;
+      animation: fadeIn .3s ease;
     }
     .card-title {
       font-size: .8rem; font-weight: 600; text-transform: uppercase;
@@ -277,16 +279,17 @@
       background: var(--surface2); border: 1px solid var(--border);
       border-radius: 8px; padding: .35rem .5rem; min-height: 38px;
       color: var(--text); font-size: .82rem; cursor: text;
-      font-family: inherit; outline: none; transition: border .15s;
+      font-family: inherit; outline: none; transition: all .2s ease;
     }
     .ms-trigger:hover, .ms-trigger.focused { border-color: var(--accent); }
+    .ms-trigger.focused { box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
     .ms-placeholder { color: var(--muted); padding: 0 .25rem; }
     .ms-tag {
       display: inline-flex; align-items: center; gap: .3rem;
       background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.3);
       color: var(--accent-glow);
-      padding: .15rem .45rem; border-radius: 5px; font-size: .78rem;
-      font-weight: 500;
+      padding: .15rem .45rem; border-radius: 6px; font-size: .78rem;
+      font-weight: 500; transition: all .15s ease;
     }
     .ms-tag .ms-tag-x {
       cursor: pointer; opacity: .7; font-size: .85rem; line-height: 1;
@@ -303,17 +306,18 @@
       position: absolute; top: calc(100% + 4px); left: 0; right: 0;
       min-width: 240px; z-index: 100;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; padding: .35rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      border-radius: 10px; padding: .35rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
+      animation: fadeIn .15s ease;
     }
     .ms-dropdown.active { display: block; }
     .ms-options {
       max-height: 260px; overflow-y: auto;
     }
     .ms-option {
-      display: block; padding: .5rem .7rem; border-radius: 5px; cursor: pointer;
+      display: block; padding: .45rem .75rem; border-radius: 6px; cursor: pointer;
       font-size: .85rem; color: var(--text);
-      transition: background .1s;
+      transition: all .12s ease;
     }
     .ms-option:hover, .ms-option.highlighted { background: rgba(99,102,241,.15); color: var(--accent-glow); }
     .ms-option.selected { opacity: .4; pointer-events: none; }
@@ -330,11 +334,18 @@
     }
     .counter-item strong { color: var(--text); font-size: 1.05rem; font-weight: 700; }
 
+    /* ── Focus ─────────────────────────────────────────────── */
+    *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
     /* ── Responsive ────────────────────────────────────────── */
     @media (max-width: 768px) {
-      .app { padding: 1rem; }
+      .app { padding: 1.25rem; }
       header h1 { font-size: 1.2rem; }
       .kw-input-row { flex-direction: column; }
+      .result-counters { flex-wrap: wrap; gap: .5rem .75rem; }
+      .search-row { flex-direction: column; }
+      .actions-row { gap: .4rem; }
     }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -461,6 +472,8 @@
   </div>
 
 </div>
+
+<footer style="text-align:center;padding:2rem 1rem 1.5rem;color:var(--muted);font-size:.75rem;opacity:.6;">Domain Finder &mdash; Check .com availability via RDAP</footer>
 
 <script>
 // ── Default keywords ──────────────────────────────────────────────────
