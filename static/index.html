@@ -76,15 +76,20 @@
     }
 
     /* ── Keywords section ──────────────────────────────────── */
-    .keywords-area { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem; }
+    .keywords-area {
+      display: flex; flex-wrap: wrap; gap: .45rem;
+      margin-bottom: 1rem; padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
     .kw-tag {
       display: inline-flex; align-items: center; gap: .35rem;
       background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; padding: .25rem .6rem;
+      border-radius: 7px; padding: .28rem .65rem;
       font-size: .8rem; color: var(--text); cursor: default;
-      transition: .15s;
+      transition: all .2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,.15);
     }
-    .kw-tag:hover { border-color: var(--red); }
+    .kw-tag:hover { border-color: var(--red); background: rgba(248,113,113,.06); }
     .kw-tag .remove {
       cursor: pointer; opacity: .5; font-size: .7rem;
       transition: .15s;
@@ -98,14 +103,14 @@
     }
     .kw-tag.kw-dim { opacity: .25; }
 
-    .kw-input-row { display: flex; gap: .5rem; }
+    .kw-input-row { display: flex; gap: .6rem; margin-top: .25rem; }
     .kw-input-row input {
       flex: 1; background: var(--surface2); border: 1px solid var(--border);
       border-radius: 8px; padding: .5rem .75rem;
       color: var(--text); font-size: .85rem; outline: none;
-      transition: border .2s;
+      transition: all .2s ease;
     }
-    .kw-input-row input:focus { border-color: var(--accent); }
+    .kw-input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
     .kw-input-row input::placeholder { color: var(--muted); }
 
     /* ── Buttons ───────────────────────────────────────────── */
@@ -168,8 +173,9 @@
       flex: 1; background: var(--surface2); border: 1px solid var(--border);
       border-radius: 8px; padding: .5rem .75rem;
       color: var(--text); font-size: .85rem; outline: none;
+      transition: all .2s ease;
     }
-    .search-row input:focus { border-color: var(--accent); }
+    .search-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
     .search-row input::placeholder { color: var(--muted); }
 
     /* ── Table ─────────────────────────────────────────────── */
@@ -376,11 +382,7 @@
     <!-- Domain text search -->
     <div class="search-row">
       <input type="text" id="domSearch" placeholder="Search domain name (e.g. 'alpha', 'forge', '.com')…"
-             oninput="scheduleRender()" style="
-        flex:1; background:var(--surface2); border:1px solid var(--border);
-        border-radius:8px; padding:.5rem .75rem;
-        color:var(--text); font-size:.85rem; outline:none;
-      " />
+             oninput="scheduleRender()" />
     </div>
 
     <div class="filters" id="filtersRow">
