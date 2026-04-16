@@ -185,42 +185,49 @@
     .search-row input::placeholder { color: var(--muted); }
 
     /* ── Table ─────────────────────────────────────────────── */
-    .table-wrap { overflow-x: auto; }
+    .table-wrap { overflow-x: auto; border-radius: 8px; overflow: hidden; }
     table {
       width: 100%; border-collapse: collapse; font-size: .85rem;
     }
     thead th {
-      text-align: left; padding: .6rem .75rem;
+      text-align: left; padding: .75rem .85rem;
       font-size: .75rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: .05em; color: var(--muted);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--border);
       cursor: pointer; user-select: none;
       white-space: nowrap;
+      background: var(--surface2);
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      transition: color .15s ease;
     }
     thead th:hover { color: var(--text); }
     thead th .sort-arrow { margin-left: .3rem; font-size: .65rem; }
     tbody tr {
       border-bottom: 1px solid rgba(30,45,69,.5);
-      transition: background .1s;
+      transition: all .15s ease;
     }
-    tbody tr:hover { background: rgba(99,102,241,.05); }
-    td { padding: .55rem .75rem; white-space: nowrap; }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,.01); }
+    tbody tr:hover { background: rgba(99,102,241,.07); box-shadow: inset 3px 0 0 var(--accent); }
+    td { padding: .65rem .85rem; white-space: nowrap; }
     td.domain-name {
       font-family: var(--mono); font-weight: 600; font-size: .9rem;
     }
     td .word-chip {
-      display: inline-block; padding: .1rem .45rem; border-radius: 4px;
-      font-size: .72rem; background: var(--surface2); margin-right: .25rem;
+      display: inline-block; padding: .12rem .5rem; border-radius: 5px;
+      font-size: .73rem; background: var(--surface2); margin-right: .25rem;
+      border: 1px solid var(--border); font-weight: 500;
     }
 
     .status-badge {
       display: inline-flex; align-items: center; gap: .3rem;
-      padding: .15rem .55rem; border-radius: 20px;
-      font-size: .75rem; font-weight: 600;
+      padding: .2rem .65rem; border-radius: 20px;
+      font-size: .76rem; font-weight: 600;
+      transition: all .15s ease;
     }
-    .status-badge.likely_available { background: var(--green-bg); color: var(--green); }
-    .status-badge.registered { background: var(--red-bg); color: var(--red); }
-    .status-badge.unknown { background: var(--yellow-bg); color: var(--yellow); }
+    .status-badge.likely_available { background: var(--green-bg); color: var(--green); box-shadow: 0 0 8px rgba(52,211,153,.15); }
+    .status-badge.registered { background: var(--red-bg); color: var(--red); box-shadow: 0 0 8px rgba(248,113,113,.1); }
+    .status-badge.unknown { background: var(--yellow-bg); color: var(--yellow); box-shadow: 0 0 8px rgba(251,191,36,.1); }
     .status-badge .dot {
       width: 6px; height: 6px; border-radius: 50%;
       background: currentColor;
@@ -230,12 +237,13 @@
       display: inline-flex; align-items: center; gap: .4rem;
     }
     .score-bar .bar {
-      width: 50px; height: 5px; background: var(--surface2);
+      width: 60px; height: 6px; background: var(--surface2);
       border-radius: 3px; overflow: hidden;
     }
     .score-bar .bar-fill {
       height: 100%; border-radius: 3px;
       background: linear-gradient(90deg, var(--accent), #a855f7);
+      transition: width .3s ease;
     }
 
     /* ── Actions ───────────────────────────────────────────── */
@@ -243,20 +251,23 @@
     .icon-btn {
       display: inline-flex; align-items: center; gap: .3rem;
       background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); padding: .25rem .55rem; border-radius: 6px;
+      color: var(--text); padding: .25rem .55rem; border-radius: 7px;
       font-size: .72rem; font-weight: 500; cursor: pointer;
-      text-decoration: none; transition: .15s;
+      text-decoration: none; transition: all .2s ease;
       font-family: inherit;
     }
-    .icon-btn:hover { border-color: var(--accent); color: var(--accent-glow); }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent-glow); transform: translateY(-1px); }
+    .icon-btn:active { transform: translateY(0); }
     .icon-btn.primary { background: rgba(249,115,22,.12); border-color: rgba(249,115,22,.35); color: #fb923c; }
     .icon-btn.primary:hover { background: rgba(249,115,22,.2); border-color: #fb923c; }
     .icon-btn svg { width: 12px; height: 12px; }
     .copied-flash { color: var(--green) !important; }
 
     .empty-state {
-      text-align: center; padding: 3rem 1rem; color: var(--muted);
+      text-align: center; padding: 4rem 1rem; color: var(--muted);
+      font-size: .9rem;
     }
+    .empty-state svg { margin-bottom: .75rem; }
     .empty-state p { margin-bottom: .5rem; }
 
     /* ── Multiselect ───────────────────────────────────────── */
@@ -444,6 +455,7 @@
       </table>
     </div>
     <div class="empty-state" id="emptyState" style="display:none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="opacity:.3;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       <p>No domains match your filters.</p>
     </div>
   </div>
