@@ -367,17 +367,128 @@
     }
     .progress-stats strong { color: var(--text); font-variant-numeric: tabular-nums; }
 
-    /* ── Filters ───────────────────────────────────────────── */
-    .filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    /* ── Filters (legacy pill chips, kept for registrar) ─── */
+    .filters { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem; }
     .filter-chip {
       padding: .3rem .75rem; border-radius: 20px; font-size: .78rem;
       border: 1px solid var(--border); background: var(--surface2);
       color: var(--muted); cursor: pointer; transition: .15s;
       font-weight: 500;
     }
-    .filter-chip:hover { border-color: var(--accent); color: var(--text); }
+    .filter-chip:hover { border-color: var(--border-strong); color: var(--text); }
     .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+    /* ── Results card header (title + registrar selector) ── */
+    .results-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap; margin-bottom: .75rem;
+    }
+    .results-card-header .card-title { margin-bottom: 0; }
+    .registrar-select { display: flex; align-items: center; gap: .5rem; }
+    .registrar-select .label { font-size: .75rem; color: var(--muted); }
+    .registrar-select .filters { margin-bottom: 0; }
+
+    /* ── Unified Results Toolbar ───────────────────────────── */
+    .toolbar-sentinel { height: 1px; margin: 0 -1.5rem; }
+    .results-toolbar {
+      position: sticky; top: 0; z-index: 5;
+      display: flex; align-items: center; gap: .75rem 1rem;
+      flex-wrap: wrap;
+      margin: 0 -1.5rem 1rem;
+      padding: .7rem 1.5rem;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background-color .2s ease, border-color .2s ease, backdrop-filter .2s ease;
+    }
+    .results-toolbar.is-pinned {
+      background: rgba(17, 24, 39, 0.78);
+      -webkit-backdrop-filter: saturate(140%) blur(12px);
+              backdrop-filter: saturate(140%) blur(12px);
+      border-bottom-color: var(--border);
+    }
+    .toolbar-zone {
+      display: flex; align-items: center; gap: .5rem;
+      flex-wrap: wrap; min-width: 0;
+    }
+    .toolbar-zone.zone-mid { flex: 1 1 260px; }
+    .toolbar-zone.zone-right {
+      margin-left: auto;
+      gap: .9rem;
+    }
+    .toolbar-label {
+      font-size: .75rem; color: var(--muted);
+      white-space: nowrap; font-weight: 500;
+    }
+
+    /* ── Segmented control ────────────────────────────────── */
+    .segmented {
+      display: inline-flex;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+      margin-bottom: 0;
+    }
+    .segmented .filter-chip {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      padding: .32rem .7rem;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 500;
+      display: inline-flex; align-items: center; gap: .35rem;
+      transition: color .15s, background-color .15s, box-shadow .15s;
+    }
+    .segmented .filter-chip:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      border-color: transparent;
+    }
+    .segmented .filter-chip.active {
+      background: var(--surface3);
+      color: var(--text);
+      border-color: transparent;
+      box-shadow: var(--elev-1), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .segmented .seg-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor; opacity: .9;
+    }
+    .segmented .seg-dot.seg-green { background: var(--green); }
+    .segmented .seg-dot.seg-red { background: var(--red); }
+    .segmented .seg-dot.seg-yellow { background: var(--yellow); }
+
+    /* ── Search input with leading magnifier ──────────────── */
+    .search-wrap {
+      position: relative;
+      display: inline-flex; align-items: center;
+      min-width: 220px;
+    }
+    .search-wrap .search-icon {
+      position: absolute; left: .65rem;
+      width: 14px; height: 14px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .45rem .75rem .45rem 2rem;
+      color: var(--text); font-size: .82rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .search-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    /* Legacy .search-row retained for backward compat */
     .search-row { display: flex; gap: .5rem; margin-bottom: 1rem; }
     .search-row input {
       flex: 1; background: var(--surface2); border: 1px solid var(--border);
@@ -511,14 +622,26 @@
     .ms-option.selected { opacity: .4; pointer-events: none; }
     .ms-empty { padding: 1rem; text-align: center; color: var(--muted); font-size: .82rem; }
 
-    /* ── Counters ──────────────────────────────────────────── */
+    /* ── Counters (compact inline) ───────────────────────── */
     .result-counters {
-      display: flex; gap: 1rem; margin-bottom: 1rem; font-size: .82rem;
+      display: inline-flex; align-items: center;
+      gap: .4rem;
+      margin-bottom: 0;
+      font-size: .78rem; color: var(--muted);
+      white-space: nowrap; flex-wrap: wrap;
     }
-    .counter-item {
-      display: flex; align-items: center; gap: .35rem; color: var(--muted);
+    .result-counters .counter-item {
+      display: inline-flex; align-items: center; gap: .25rem;
     }
-    .counter-item strong { color: var(--text); font-size: 1rem; }
+    .result-counters .counter-item strong {
+      color: var(--text); font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      font-size: .82rem;
+    }
+    .result-counters .counter-item.c-avail strong { color: var(--green); }
+    .result-counters .counter-item.c-reg strong { color: var(--red); }
+    .result-counters .counter-item.c-unk strong { color: var(--yellow); }
+    .result-counters .counter-sep { color: var(--muted); opacity: .4; }
 
     /* ── Responsive ────────────────────────────────────────── */
     @media (max-width: 768px) {
@@ -592,11 +715,11 @@
 
   <!-- Results Card -->
   <div class="card" id="resultsCard" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem;">
-      <div class="card-title" style="margin-bottom:0;">Results</div>
-      <div style="display:flex;align-items:center;gap:.5rem;">
-        <span style="font-size:.75rem;color:var(--muted);">Register with:</span>
-        <div class="filters" id="regChoices" style="margin-bottom:0;">
+    <div class="results-card-header">
+      <div class="card-title">Results</div>
+      <div class="registrar-select">
+        <span class="label">Register with:</span>
+        <div class="filters" id="regChoices">
           <span class="filter-chip reg-choice" data-reg="cloudflare" onclick="setRegistrar('cloudflare')">Cloudflare</span>
           <span class="filter-chip reg-choice" data-reg="aws" onclick="setRegistrar('aws')">AWS</span>
           <span class="filter-chip reg-choice" data-reg="godaddy" onclick="setRegistrar('godaddy')">GoDaddy</span>
@@ -604,50 +727,50 @@
       </div>
     </div>
 
-
-    <!-- Domain text search -->
-    <div class="search-row">
-      <input type="text" id="domSearch" placeholder="Search domain name (e.g. 'alpha', 'forge', '.com')…"
-             oninput="scheduleRender()" style="
-        flex:1; background:var(--surface2); border:1px solid var(--border);
-        border-radius:8px; padding:.5rem .75rem;
-        color:var(--text); font-size:.85rem; outline:none;
-      " />
-    </div>
-
-    <div class="filters" id="filtersRow">
-      <span class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</span>
-      <span class="filter-chip" data-filter="likely_available" onclick="setFilter('likely_available',this)">Likely Available</span>
-      <span class="filter-chip" data-filter="registered" onclick="setFilter('registered',this)">Registered</span>
-      <span class="filter-chip" data-filter="unknown" onclick="setFilter('unknown',this)">Unknown</span>
-    </div>
-
-    <!-- Keyword position filter -->
-    <div class="search-row" style="gap:.75rem; align-items:center; flex-wrap:wrap;">
-      <label style="font-size:.8rem;color:var(--muted);white-space:nowrap;">Filter by keywords:</label>
-
-      <div class="multiselect" id="kwMultiselect">
-        <div class="ms-trigger" id="msTrigger" onclick="focusMsInput(event)">
-          <div id="msTags" style="display:contents;"></div>
-          <input type="text" id="msSearch" class="ms-input"
-                 placeholder="Select keywords…"
-                 oninput="onMsInput()"
-                 onkeydown="onMsKeydown(event)"
-                 onfocus="openMultiselect()" />
-        </div>
-        <div class="ms-dropdown" id="msDropdown">
-          <div class="ms-options" id="msOptions"></div>
+    <div class="toolbar-sentinel" id="toolbarSentinel"></div>
+    <div class="results-toolbar" id="resultsToolbar">
+      <!-- Left: status segmented control -->
+      <div class="toolbar-zone zone-left">
+        <div class="segmented" id="filtersRow" role="tablist" aria-label="Filter by status">
+          <span class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</span>
+          <span class="filter-chip" data-filter="likely_available" onclick="setFilter('likely_available',this)"><span class="seg-dot seg-green"></span>Likely</span>
+          <span class="filter-chip" data-filter="registered" onclick="setFilter('registered',this)"><span class="seg-dot seg-red"></span>Registered</span>
+          <span class="filter-chip" data-filter="unknown" onclick="setFilter('unknown',this)"><span class="seg-dot seg-yellow"></span>Unknown</span>
         </div>
       </div>
 
-      <div class="filters" id="posFilters" style="margin-bottom:0;">
-        <span class="filter-chip active" data-pos="any" onclick="setPosFilter('any',this)">Any position</span>
-        <span class="filter-chip" data-pos="prefix" onclick="setPosFilter('prefix',this)">Keyword first</span>
-        <span class="filter-chip" data-pos="suffix" onclick="setPosFilter('suffix',this)">Keyword last</span>
+      <!-- Middle: keyword multiselect + position segmented -->
+      <div class="toolbar-zone zone-mid">
+        <span class="toolbar-label">Keyword</span>
+        <div class="multiselect" id="kwMultiselect">
+          <div class="ms-trigger" id="msTrigger" onclick="focusMsInput(event)">
+            <div id="msTags" style="display:contents;"></div>
+            <input type="text" id="msSearch" class="ms-input"
+                   placeholder="Select keywords…"
+                   oninput="onMsInput()"
+                   onkeydown="onMsKeydown(event)"
+                   onfocus="openMultiselect()" />
+          </div>
+          <div class="ms-dropdown" id="msDropdown">
+            <div class="ms-options" id="msOptions"></div>
+          </div>
+        </div>
+        <div class="segmented" id="posFilters" role="tablist" aria-label="Filter by keyword position">
+          <span class="filter-chip active" data-pos="any" onclick="setPosFilter('any',this)">Any</span>
+          <span class="filter-chip" data-pos="prefix" onclick="setPosFilter('prefix',this)">First</span>
+          <span class="filter-chip" data-pos="suffix" onclick="setPosFilter('suffix',this)">Last</span>
+        </div>
+      </div>
+
+      <!-- Right: search + inline counters -->
+      <div class="toolbar-zone zone-right">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="domSearch" placeholder="Search domain…" oninput="scheduleRender()" />
+        </div>
+        <div class="result-counters" id="resultCounters"></div>
       </div>
     </div>
-
-    <div class="result-counters" id="resultCounters"></div>
 
     <div class="table-wrap">
       <table>
@@ -1058,11 +1181,13 @@ function renderTable() {
   const reg = results.filter(r => r.status === "registered").length;
   const unk = results.filter(r => r.status === "unknown").length;
   document.getElementById("resultCounters").innerHTML = `
-    <span class="counter-item"><strong>${allCount}</strong> total</span>
-    <span class="counter-item"><strong style="color:var(--green)">${avail}</strong> likely available</span>
-    <span class="counter-item"><strong style="color:var(--red)">${reg}</strong> registered</span>
-    <span class="counter-item"><strong style="color:var(--yellow)">${unk}</strong> unknown</span>
-    <span class="counter-item"><strong>${filtered.length}</strong> shown</span>
+    <span class="counter-item c-avail" title="Likely available"><strong>${avail}</strong>avail</span>
+    <span class="counter-sep">·</span>
+    <span class="counter-item c-reg" title="Registered"><strong>${reg}</strong>reg</span>
+    <span class="counter-sep">·</span>
+    <span class="counter-item c-unk" title="Unknown"><strong>${unk}</strong>unk</span>
+    <span class="counter-sep">·</span>
+    <span class="counter-item" title="Currently shown"><strong>${filtered.length}</strong>shown</span>
   `;
 
   const tbody = document.getElementById("tableBody");
@@ -1197,6 +1322,20 @@ function scheduleRender() {
     renderTable();
   });
 }
+
+// ── Sticky toolbar pinned detection ──────────────────────────────────
+(function initToolbarPinObserver() {
+  const sentinel = document.getElementById("toolbarSentinel");
+  const toolbar = document.getElementById("resultsToolbar");
+  if (!sentinel || !toolbar || typeof IntersectionObserver === "undefined") return;
+  const obs = new IntersectionObserver(
+    ([entry]) => {
+      toolbar.classList.toggle("is-pinned", !entry.isIntersecting);
+    },
+    { threshold: [0] }
+  );
+  obs.observe(sentinel);
+})();
 
 // ── Init ──────────────────────────────────────────────────────────────
 renderKeywords();
