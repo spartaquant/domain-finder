@@ -505,7 +505,12 @@ function addKeywords() {
 
 function resetKeywords() {
   keywords = [...DEFAULT_KEYWORDS];
+  document.getElementById("kwInput").value = "";
   renderKeywords();
+  highlightMatchingKeywords();
+  selectedKeywords.clear();
+  populateKwDropdown();
+  renderTable();
 }
 
 document.getElementById("kwInput").addEventListener("keydown", e => {
