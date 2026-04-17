@@ -34,6 +34,7 @@
       --elev-3: 0 18px 48px rgba(0,0,0,.45), 0 4px 12px rgba(0,0,0,.35);
       --gradient-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #22d3ee 100%);
       --gradient-hero: linear-gradient(120deg, #c7d2fe 0%, #a5f3fc 55%, #818cf8 100%);
+      --toolbar-h: 56px;
     }
     body {
       font-family: var(--font);
@@ -501,24 +502,40 @@
     /* ── Table ─────────────────────────────────────────────── */
     .table-wrap { overflow-x: auto; }
     table {
-      width: 100%; border-collapse: collapse; font-size: .85rem;
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      font-size: .85rem;
     }
     thead th {
-      text-align: left; padding: .6rem .75rem;
-      font-size: .75rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .05em; color: var(--muted);
+      position: sticky; top: var(--toolbar-h); z-index: 2;
+      text-align: left; padding: .55rem .75rem;
+      font-size: .72rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted);
+      background: var(--surface);
       border-bottom: 1px solid var(--border);
+      box-shadow: 0 6px 10px -8px rgba(0,0,0,.35);
       cursor: pointer; user-select: none;
       white-space: nowrap;
     }
     thead th:hover { color: var(--text); }
-    thead th .sort-arrow { margin-left: .3rem; font-size: .65rem; }
-    tbody tr {
-      border-bottom: 1px solid rgba(30,45,69,.5);
-      transition: background .1s;
+    thead th:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
     }
-    tbody tr:hover { background: rgba(99,102,241,.05); }
-    td { padding: .55rem .75rem; white-space: nowrap; }
+    thead th.num { text-align: right; }
+    thead th[aria-sort="ascending"],
+    thead th[aria-sort="descending"] { color: var(--text); }
+    thead th .sort-arrow { margin-left: .3rem; font-size: .65rem; opacity: .85; }
+    tbody tr {
+      transition: background-color .12s;
+    }
+    tbody tr:nth-child(even) { background: rgba(148, 163, 184, 0.03); }
+    tbody tr:hover { background: rgba(99, 102, 241, 0.07); }
+    tbody tr:focus-within { background: rgba(99, 102, 241, 0.08); }
+    td {
+      padding: .45rem .75rem; white-space: nowrap;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+    }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
     td.domain-name {
       font-family: var(--mono); font-weight: 600; font-size: .9rem;
     }
@@ -527,42 +544,80 @@
       font-size: .72rem; background: var(--surface2); margin-right: .25rem;
     }
 
+    /* ── Status badges with icons ─────────────────────────── */
     .status-badge {
-      display: inline-flex; align-items: center; gap: .3rem;
-      padding: .15rem .55rem; border-radius: 20px;
-      font-size: .75rem; font-weight: 600;
+      display: inline-flex; align-items: center; gap: .32rem;
+      padding: .18rem .55rem .18rem .45rem; border-radius: 7px;
+      font-size: .74rem; font-weight: 600;
+      border: 1px solid transparent;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
     }
-    .status-badge.likely_available { background: var(--green-bg); color: var(--green); }
-    .status-badge.registered { background: var(--red-bg); color: var(--red); }
-    .status-badge.unknown { background: var(--yellow-bg); color: var(--yellow); }
-    .status-badge .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: currentColor;
+    .status-badge.likely_available {
+      background: var(--green-bg); color: var(--green);
+      border-color: rgba(52, 211, 153, 0.22);
+    }
+    .status-badge.registered {
+      background: var(--red-bg); color: var(--red);
+      border-color: rgba(248, 113, 113, 0.22);
+    }
+    .status-badge.unknown {
+      background: var(--yellow-bg); color: var(--yellow);
+      border-color: rgba(251, 191, 36, 0.22);
+    }
+    .status-badge .status-icon {
+      width: 12px; height: 12px;
+      flex: 0 0 auto;
     }
 
-    .score-bar {
-      display: inline-flex; align-items: center; gap: .4rem;
+    /* ── Score gauge (5-segment) ──────────────────────────── */
+    .score-gauge {
+      display: inline-flex; align-items: center; gap: .5rem;
     }
-    .score-bar .bar {
-      width: 50px; height: 5px; background: var(--surface2);
-      border-radius: 3px; overflow: hidden;
+    .score-gauge .segs {
+      display: inline-flex; gap: 2px;
     }
-    .score-bar .bar-fill {
-      height: 100%; border-radius: 3px;
-      background: linear-gradient(90deg, var(--accent), #a855f7);
+    .score-gauge .seg {
+      width: 8px; height: 8px; border-radius: 2px;
+      background: rgba(148, 163, 184, 0.12);
+      color: transparent;
     }
+    .score-gauge .seg.filled { background: var(--accent); color: var(--accent); }
+    .score-gauge .seg.filled.low { background: rgba(148, 163, 184, 0.55); color: rgba(148, 163, 184, 0.55); }
+    .score-gauge .seg.filled.high { background: var(--green); color: var(--green); }
+    .score-gauge .seg.tip {
+      box-shadow: 0 0 6px -1px currentColor;
+      filter: brightness(1.12);
+    }
+    .score-gauge .score-num {
+      font-variant-numeric: tabular-nums;
+      font-size: .82rem;
+      color: var(--text);
+      min-width: 1.75ch; text-align: right;
+    }
+    .score-gauge .score-num.low { color: var(--muted); }
+    .score-gauge .score-num.mid { color: var(--accent-glow); }
+    .score-gauge .score-num.high { color: var(--green); }
 
     /* ── Actions ───────────────────────────────────────────── */
-    .action-btns { display: inline-flex; gap: .35rem; }
+    .action-btns {
+      display: inline-flex; gap: .35rem;
+      opacity: 0; transform: translateX(4px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    tbody tr:hover .action-btns,
+    tbody tr:focus-within .action-btns {
+      opacity: 1; transform: none;
+    }
     .icon-btn {
       display: inline-flex; align-items: center; gap: .3rem;
       background: var(--surface2); border: 1px solid var(--border);
       color: var(--text); padding: .25rem .55rem; border-radius: 6px;
       font-size: .72rem; font-weight: 500; cursor: pointer;
-      text-decoration: none; transition: .15s;
+      text-decoration: none;
+      transition: border-color .15s, color .15s, background-color .15s;
       font-family: inherit;
     }
-    .icon-btn:hover { border-color: var(--accent); color: var(--accent-glow); }
+    .icon-btn:hover { border-color: var(--border-strong); color: var(--accent-glow); }
     .icon-btn.primary { background: rgba(249,115,22,.12); border-color: rgba(249,115,22,.35); color: #fb923c; }
     .icon-btn.primary:hover { background: rgba(249,115,22,.2); border-color: #fb923c; }
     .icon-btn svg { width: 12px; height: 12px; }
@@ -776,12 +831,12 @@
       <table>
         <thead>
           <tr>
-            <th onclick="sortBy('rank')">Rank <span class="sort-arrow" id="sort-rank"></span></th>
-            <th onclick="sortBy('domain')">Domain <span class="sort-arrow" id="sort-domain"></span></th>
-            <th onclick="sortBy('score')">Score <span class="sort-arrow" id="sort-score"></span></th>
-            <th onclick="sortBy('status')">Status <span class="sort-arrow" id="sort-status"></span></th>
+            <th class="num" role="button" aria-sort="none" data-sort-col="rank" onclick="sortBy('rank')">Rank <span class="sort-arrow" id="sort-rank"></span></th>
+            <th role="button" aria-sort="none" data-sort-col="domain" onclick="sortBy('domain')">Domain <span class="sort-arrow" id="sort-domain"></span></th>
+            <th class="num" role="button" aria-sort="none" data-sort-col="score" onclick="sortBy('score')">Score <span class="sort-arrow" id="sort-score"></span></th>
+            <th role="button" aria-sort="none" data-sort-col="status" onclick="sortBy('status')">Status <span class="sort-arrow" id="sort-status"></span></th>
             <th>Words</th>
-            <th onclick="sortBy('length')">Length <span class="sort-arrow" id="sort-length"></span></th>
+            <th class="num" role="button" aria-sort="none" data-sort-col="length" onclick="sortBy('length')">Length <span class="sort-arrow" id="sort-length"></span></th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -1017,10 +1072,15 @@ function sortBy(col) {
     sortCol = col;
     sortDir = col === "domain" ? 1 : -1;
   }
-  // Update arrows
+  // Update arrows + aria-sort
   document.querySelectorAll(".sort-arrow").forEach(s => s.textContent = "");
+  document.querySelectorAll("th[data-sort-col]").forEach(th => {
+    th.setAttribute("aria-sort", "none");
+  });
   const arrow = document.getElementById(`sort-${col}`);
   if (arrow) arrow.textContent = sortDir === 1 ? "▲" : "▼";
+  const th = document.querySelector(`th[data-sort-col="${col}"]`);
+  if (th) th.setAttribute("aria-sort", sortDir === 1 ? "ascending" : "descending");
   renderTable();
 }
 
@@ -1200,29 +1260,49 @@ function renderTable() {
   }
   empty.style.display = "none";
 
-  // Max score for bar scaling
+  // Max score for gauge scaling
   const maxScore = Math.max(...results.map(r => r.score), 1);
+  const SEG_COUNT = 5;
 
   tbody.innerHTML = filtered.map(r => {
     const statusClass = r.status === "likely_available" ? "likely_available"
       : r.status === "registered" ? "registered" : "unknown";
     const statusLabel = r.status === "likely_available" ? "likely available" : r.status;
-    const pct = Math.max(0, Math.round((r.score / maxScore) * 100));
+    const statusIcon = renderStatusIcon(r.status);
+    const ratio = Math.max(0, Math.min(1, r.score / maxScore));
+    const filledCount = Math.max(ratio > 0 ? 1 : 0, Math.round(ratio * SEG_COUNT));
+    const scoreTier = ratio >= 0.8 ? "high" : ratio >= 0.4 ? "mid" : "low";
+    const segs = Array.from({ length: SEG_COUNT }, (_, i) => {
+      const isFilled = i < filledCount;
+      const isTip = isFilled && i === filledCount - 1;
+      const tierCls = isFilled ? (scoreTier === "high" ? "high" : scoreTier === "low" ? "low" : "") : "";
+      return `<span class="seg${isFilled ? " filled" : ""}${tierCls ? " " + tierCls : ""}${isTip ? " tip" : ""}"></span>`;
+    }).join("");
     return `<tr>
-      <td>${r._rank}</td>
+      <td class="num">${r._rank}</td>
       <td class="domain-name">${r.domain}</td>
-      <td>
-        <span class="score-bar">
-          <span class="bar"><span class="bar-fill" style="width:${pct}%"></span></span>
-          ${r.score}
+      <td class="num">
+        <span class="score-gauge" aria-label="Score ${r.score} of ${maxScore}">
+          <span class="segs" aria-hidden="true">${segs}</span>
+          <span class="score-num ${scoreTier}">${r.score}</span>
         </span>
       </td>
-      <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
+      <td><span class="status-badge ${statusClass}">${statusIcon}${statusLabel}</span></td>
       <td><span class="word-chip">${r.word1}</span><span class="word-chip">${r.word2}</span></td>
-      <td>${r.name.length}</td>
+      <td class="num">${r.name.length}</td>
       <td>${renderActions(r)}</td>
     </tr>`;
   }).join("");
+}
+
+function renderStatusIcon(status) {
+  if (status === "likely_available") {
+    return `<svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  }
+  if (status === "registered") {
+    return `<svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  }
+  return `<svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>`;
 }
 
 // ── Actions ──────────────────────────────────────────────────────────
