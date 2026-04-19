@@ -83,7 +83,35 @@
     }
 
     /* ── Keywords section ──────────────────────────────────── */
-    .keywords-area { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem; }
+    .kw-header {
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: .75rem; cursor: pointer; user-select: none;
+    }
+    .kw-header .card-title { margin-bottom: 0; }
+    .kw-badge {
+      font-size: .72rem; font-weight: 600;
+      background: rgba(99,102,241,.15); color: var(--accent-glow);
+      padding: .15rem .55rem; border-radius: 12px;
+    }
+    .kw-chevron {
+      margin-left: auto; font-size: .7rem; color: var(--muted);
+      transition: transform .3s ease;
+    }
+    .card.kw-collapsed .kw-chevron { transform: rotate(-90deg); }
+    .kw-body {
+      max-height: 500px; overflow: hidden;
+      transition: max-height .3s ease, opacity .3s ease;
+      opacity: 1;
+    }
+    .card.kw-collapsed .kw-body {
+      max-height: 0; opacity: 0;
+    }
+    .keywords-area {
+      display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem;
+      max-height: 200px; overflow-y: auto;
+      -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    }
     .kw-tag {
       display: inline-flex; align-items: center; gap: .35rem;
       background: var(--surface2); border: 1px solid var(--border);
@@ -105,15 +133,17 @@
     }
     .kw-tag.kw-dim { opacity: .25; }
 
-    .kw-input-row { display: flex; gap: .5rem; }
+    .kw-input-row { display: flex; gap: 0; }
     .kw-input-row input {
       flex: 1; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: .5rem .75rem;
+      border-radius: 8px 0 0 8px; padding: .5rem .75rem;
       color: var(--text); font-size: .85rem; outline: none;
       transition: border .2s;
     }
     .kw-input-row input:focus { border-color: var(--accent); }
     .kw-input-row input::placeholder { color: var(--muted); }
+    .kw-input-row .btn:first-of-type { border-radius: 0; border-left: none; }
+    .kw-input-row .btn:last-of-type { border-radius: 0 8px 8px 0; border-left: none; }
 
     /* ── Buttons ───────────────────────────────────────────── */
     .btn {
@@ -329,13 +359,19 @@
   </header>
 
   <!-- Keywords Card -->
-  <div class="card">
-    <div class="card-title">Keywords</div>
-    <div class="keywords-area" id="keywordsArea"></div>
-    <div class="kw-input-row">
-      <input type="text" id="kwInput" placeholder="Add keywords (comma-separated)…" />
-      <button class="btn btn-secondary btn-sm" onclick="addKeywords()">Add</button>
-      <button class="btn btn-secondary btn-sm" onclick="resetKeywords()">Reset</button>
+  <div class="card kw-collapsed" id="kwCard">
+    <div class="kw-header" onclick="toggleKeywords()">
+      <div class="card-title">Keywords</div>
+      <span class="kw-badge" id="kwBadge"></span>
+      <span class="kw-chevron">&#9660;</span>
+    </div>
+    <div class="kw-body">
+      <div class="keywords-area" id="keywordsArea"></div>
+      <div class="kw-input-row">
+        <input type="text" id="kwInput" placeholder="Add keywords (comma-separated)…" />
+        <button class="btn btn-secondary btn-sm" onclick="addKeywords()">Add</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetKeywords()">Reset</button>
+      </div>
     </div>
   </div>
 
@@ -484,6 +520,7 @@ function renderKeywords() {
     `<span class="kw-tag" data-kw="${k}">${k}<span class="remove" onclick="removeKeyword('${k}')">&times;</span></span>`
   ).join("");
   document.getElementById("kwCount").textContent = `${unique.length} keywords`;
+  document.getElementById("kwBadge").textContent = `${unique.length} keywords`;
   highlightMatchingKeywords();
 }
 
@@ -936,7 +973,17 @@ function scheduleRender() {
   });
 }
 
+// ── Collapsible keywords ──────────────────────────────────────────────
+function toggleKeywords() {
+  const card = document.getElementById("kwCard");
+  card.classList.toggle("kw-collapsed");
+  localStorage.setItem("kwCollapsed", card.classList.contains("kw-collapsed") ? "1" : "0");
+}
+
 // ── Init ──────────────────────────────────────────────────────────────
+if (localStorage.getItem("kwCollapsed") === "0") {
+  document.getElementById("kwCard").classList.remove("kw-collapsed");
+}
 renderKeywords();
 populateKwDropdown();
 setRegistrar(currentRegistrar());
