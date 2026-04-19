@@ -26,6 +26,22 @@
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
     }
+    [data-theme="light"] {
+      --bg: #f8f9fb;
+      --surface: #ffffff;
+      --surface2: #f0f2f5;
+      --border: #d1d5db;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --accent: #4f46e5;
+      --accent-glow: #6366f1;
+      --green: #16a34a;
+      --green-bg: rgba(22,163,74,.12);
+      --red: #dc2626;
+      --red-bg: rgba(220,38,38,.08);
+      --yellow: #d97706;
+      --yellow-bg: rgba(217,119,6,.10);
+    }
     body {
       font-family: var(--font);
       background: var(--bg);
@@ -173,7 +189,7 @@
     thead th:hover { color: var(--text); }
     thead th .sort-arrow { margin-left: .3rem; font-size: .65rem; }
     tbody tr {
-      border-bottom: 1px solid rgba(30,45,69,.5);
+      border-bottom: 1px solid var(--border);
       transition: background .1s;
     }
     tbody tr:hover { background: rgba(99,102,241,.05); }
@@ -280,6 +296,7 @@
     .ms-option:hover, .ms-option.highlighted { background: rgba(99,102,241,.15); color: var(--accent-glow); }
     .ms-option.selected { opacity: .4; pointer-events: none; }
     .ms-empty { padding: 1rem; text-align: center; color: var(--muted); font-size: .82rem; }
+    [data-theme="light"] .ms-dropdown { box-shadow: 0 10px 30px rgba(0,0,0,.12); }
 
     /* ── Counters ──────────────────────────────────────────── */
     .result-counters {
