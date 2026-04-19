@@ -266,14 +266,21 @@
       border-bottom: 1px solid var(--border);
       cursor: pointer; user-select: none;
       white-space: nowrap;
+      position: sticky; top: 0; z-index: 10;
+      background: var(--surface);
     }
     thead th:hover { color: var(--text); }
     thead th .sort-arrow { margin-left: .3rem; font-size: .65rem; }
     tbody tr {
       border-bottom: 1px solid rgba(30,45,69,.5);
       transition: background .1s;
+      border-left: 3px solid transparent;
     }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,.02); }
     tbody tr:hover { background: rgba(99,102,241,.05); }
+    tbody tr.row-available { border-left-color: var(--green); }
+    tbody tr.row-registered { border-left-color: var(--red); }
+    tbody tr.row-unknown { border-left-color: var(--yellow); }
     td { padding: .55rem .75rem; white-space: nowrap; }
     td.domain-name {
       font-family: var(--mono); font-weight: 600; font-size: .9rem;
@@ -300,8 +307,8 @@
       display: inline-flex; align-items: center; gap: .4rem;
     }
     .score-bar .bar {
-      width: 50px; height: 5px; background: var(--surface2);
-      border-radius: 3px; overflow: hidden;
+      width: 80px; height: 6px; background: var(--surface2);
+      border-radius: 3px; overflow: hidden; position: relative;
     }
     .score-bar .bar-fill {
       height: 100%; border-radius: 3px;
@@ -313,7 +320,7 @@
     .icon-btn {
       display: inline-flex; align-items: center; gap: .3rem;
       background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); padding: .25rem .55rem; border-radius: 6px;
+      color: var(--text); padding: .3rem .65rem; border-radius: 6px;
       font-size: .72rem; font-weight: 500; cursor: pointer;
       text-decoration: none; transition: .15s;
       font-family: inherit;
@@ -924,9 +931,11 @@ function renderTable() {
   tbody.innerHTML = filtered.map(r => {
     const statusClass = r.status === "likely_available" ? "likely_available"
       : r.status === "registered" ? "registered" : "unknown";
+    const rowClass = r.status === "likely_available" ? "row-available"
+      : r.status === "registered" ? "row-registered" : "row-unknown";
     const statusLabel = r.status === "likely_available" ? "likely available" : r.status;
     const pct = Math.max(0, Math.round((r.score / maxScore) * 100));
-    return `<tr>
+    return `<tr class="${rowClass}">
       <td>${r._rank}</td>
       <td class="domain-name">${r.domain}</td>
       <td>
