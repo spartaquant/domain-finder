@@ -209,14 +209,39 @@
     }
     .stat-badge svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    /* ── Filters ───────────────────────────────────────────── */
+    /* ── Toolbar ───────────────────────────────────────────── */
+    .toolbar {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: .75rem;
+      display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .toolbar-sep {
+      width: 1px; align-self: stretch;
+      background: var(--border); flex-shrink: 0;
+    }
+    .toolbar-group {
+      display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+    }
+    .toolbar-group label {
+      font-size: .75rem; color: var(--muted); white-space: nowrap; margin-right: .15rem;
+    }
+    .toolbar .search-input {
+      flex: 1; min-width: 180px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: .45rem .7rem;
+      color: var(--text); font-size: .85rem; outline: none;
+    }
+    .toolbar .search-input:focus { border-color: var(--accent); }
+    .toolbar .search-input::placeholder { color: var(--muted); }
+
     .filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
     .filter-chip {
-      padding: .3rem .75rem; border-radius: 20px; font-size: .78rem;
+      padding: .35rem .85rem; border-radius: 20px; font-size: .78rem;
       border: 1px solid var(--border); background: var(--surface2);
       color: var(--muted); cursor: pointer; transition: .15s;
       font-weight: 500;
     }
+    .toolbar .filter-chip { background: var(--surface); }
     .filter-chip:hover { border-color: var(--accent); color: var(--text); }
     .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
@@ -367,6 +392,10 @@
       .app { padding: 1rem; }
       header h1 { font-size: 1.2rem; }
       .kw-input-row { flex-direction: column; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-sep { width: auto; height: 1px; align-self: auto; }
+      .toolbar-group { justify-content: flex-start; }
+      .toolbar .search-input { min-width: 0; width: 100%; }
     }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -447,45 +476,45 @@
     </div>
 
 
-    <!-- Domain text search -->
-    <div class="search-row">
-      <input type="text" id="domSearch" placeholder="Search domain name (e.g. 'alpha', 'forge', '.com')…"
-             oninput="scheduleRender()" style="
-        flex:1; background:var(--surface2); border:1px solid var(--border);
-        border-radius:8px; padding:.5rem .75rem;
-        color:var(--text); font-size:.85rem; outline:none;
-      " />
-    </div>
+    <!-- Unified toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-group" id="filtersRow">
+        <span class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</span>
+        <span class="filter-chip" data-filter="likely_available" onclick="setFilter('likely_available',this)">Available</span>
+        <span class="filter-chip" data-filter="registered" onclick="setFilter('registered',this)">Registered</span>
+        <span class="filter-chip" data-filter="unknown" onclick="setFilter('unknown',this)">Unknown</span>
+      </div>
 
-    <div class="filters" id="filtersRow">
-      <span class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</span>
-      <span class="filter-chip" data-filter="likely_available" onclick="setFilter('likely_available',this)">Likely Available</span>
-      <span class="filter-chip" data-filter="registered" onclick="setFilter('registered',this)">Registered</span>
-      <span class="filter-chip" data-filter="unknown" onclick="setFilter('unknown',this)">Unknown</span>
-    </div>
+      <div class="toolbar-sep"></div>
 
-    <!-- Keyword position filter -->
-    <div class="search-row" style="gap:.75rem; align-items:center; flex-wrap:wrap;">
-      <label style="font-size:.8rem;color:var(--muted);white-space:nowrap;">Filter by keywords:</label>
+      <input type="text" id="domSearch" class="search-input"
+             placeholder="Search domains…" oninput="scheduleRender()" />
 
-      <div class="multiselect" id="kwMultiselect">
-        <div class="ms-trigger" id="msTrigger" onclick="focusMsInput(event)">
-          <div id="msTags" style="display:contents;"></div>
-          <input type="text" id="msSearch" class="ms-input"
-                 placeholder="Select keywords…"
-                 oninput="onMsInput()"
-                 onkeydown="onMsKeydown(event)"
-                 onfocus="openMultiselect()" />
-        </div>
-        <div class="ms-dropdown" id="msDropdown">
-          <div class="ms-options" id="msOptions"></div>
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <label>Keywords:</label>
+        <div class="multiselect" id="kwMultiselect">
+          <div class="ms-trigger" id="msTrigger" onclick="focusMsInput(event)">
+            <div id="msTags" style="display:contents;"></div>
+            <input type="text" id="msSearch" class="ms-input"
+                   placeholder="Select keywords…"
+                   oninput="onMsInput()"
+                   onkeydown="onMsKeydown(event)"
+                   onfocus="openMultiselect()" />
+          </div>
+          <div class="ms-dropdown" id="msDropdown">
+            <div class="ms-options" id="msOptions"></div>
+          </div>
         </div>
       </div>
 
-      <div class="filters" id="posFilters" style="margin-bottom:0;">
-        <span class="filter-chip active" data-pos="any" onclick="setPosFilter('any',this)">Any position</span>
-        <span class="filter-chip" data-pos="prefix" onclick="setPosFilter('prefix',this)">Keyword first</span>
-        <span class="filter-chip" data-pos="suffix" onclick="setPosFilter('suffix',this)">Keyword last</span>
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group" id="posFilters">
+        <span class="filter-chip active" data-pos="any" onclick="setPosFilter('any',this)">Any</span>
+        <span class="filter-chip" data-pos="prefix" onclick="setPosFilter('prefix',this)">Prefix</span>
+        <span class="filter-chip" data-pos="suffix" onclick="setPosFilter('suffix',this)">Suffix</span>
       </div>
     </div>
 
