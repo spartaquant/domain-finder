@@ -8,6 +8,7 @@
   <style>
     /* ── Reset & Base ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     :root {
       --bg: #0b0f1a;
       --surface: #111827;
@@ -77,6 +78,18 @@
       padding: 1.25rem 1.5rem;
       margin-bottom: 1.25rem;
     }
+    @supports (backdrop-filter: blur(12px)) {
+      .card {
+        background: rgba(17,24,39,.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-enter { animation: fadeIn .35s ease both; }
     .card-title {
       font-size: .8rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: .06em; color: var(--muted); margin-bottom: .75rem;
@@ -281,6 +294,7 @@
     tbody tr.row-available { border-left-color: var(--green); }
     tbody tr.row-registered { border-left-color: var(--red); }
     tbody tr.row-unknown { border-left-color: var(--yellow); }
+    tbody tr.row-anim { animation: fadeIn .3s ease both; animation-delay: calc(var(--row-index) * 20ms); }
     td { padding: .55rem .75rem; white-space: nowrap; }
     td.domain-name {
       font-family: var(--mono); font-weight: 600; font-size: .9rem;
@@ -394,6 +408,22 @@
     }
     .counter-item strong { color: var(--text); font-size: 1rem; }
 
+    /* ── Scroll-to-top ─────────────────────────────────────── */
+    .scroll-top {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 50;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent); color: #fff; border: none;
+      cursor: pointer; display: none; place-items: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      transition: opacity .2s, transform .2s;
+    }
+    .scroll-top:hover { transform: scale(1.1); background: var(--accent-glow); }
+    .scroll-top.visible { display: grid; }
+    .scroll-top svg { width: 20px; height: 20px; }
+
+    /* ── Empty state ───────────────────────────────────────── */
+    .empty-state svg { width: 48px; height: 48px; color: var(--muted); margin-bottom: .75rem; }
+
     /* ── Responsive ────────────────────────────────────────── */
     @media (max-width: 768px) {
       .app { padding: 1rem; }
@@ -403,6 +433,10 @@
       .toolbar-sep { width: auto; height: 1px; align-self: auto; }
       .toolbar-group { justify-content: flex-start; }
       .toolbar .search-input { min-width: 0; width: 100%; }
+      .table-wrap { -webkit-overflow-scrolling: touch; }
+      .icon-btn { min-height: 44px; min-width: 44px; justify-content: center; }
+      .filter-chip { min-height: 44px; display: inline-flex; align-items: center; }
+      .btn { min-height: 44px; }
     }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -544,9 +578,14 @@
       </table>
     </div>
     <div class="empty-state" id="emptyState" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <p>No domains match your filters.</p>
     </div>
   </div>
+
+  <button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+  </button>
 
 </div>
 
@@ -655,7 +694,11 @@ function startCheck(recheckUnknown = false) {
   document.getElementById("startBtn").disabled = true;
   document.getElementById("stopBtn").style.display = "";
   document.getElementById("progressWrap").classList.add("active");
-  document.getElementById("resultsCard").style.display = "";
+  const rc = document.getElementById("resultsCard");
+  rc.style.display = "";
+  rc.classList.remove("card-enter");
+  void rc.offsetWidth;
+  rc.classList.add("card-enter");
   populateKwDropdown();
   document.getElementById("tableBody").innerHTML = "";
   document.getElementById("checkedCount").textContent = "0";
@@ -935,7 +978,9 @@ function renderTable() {
       : r.status === "registered" ? "row-registered" : "row-unknown";
     const statusLabel = r.status === "likely_available" ? "likely available" : r.status;
     const pct = Math.max(0, Math.round((r.score / maxScore) * 100));
-    return `<tr class="${rowClass}">
+    const animStyle = r._rank <= 20 ? `style="--row-index:${r._rank - 1}"` : '';
+    const animClass = r._rank <= 20 ? ' row-anim' : '';
+    return `<tr class="${rowClass}${animClass}" ${animStyle}>
       <td>${r._rank}</td>
       <td class="domain-name">${r.domain}</td>
       <td>
@@ -1056,6 +1101,11 @@ function toggleKeywords() {
   card.classList.toggle("kw-collapsed");
   localStorage.setItem("kwCollapsed", card.classList.contains("kw-collapsed") ? "1" : "0");
 }
+
+// ── Scroll-to-top visibility ──────────────────────────────────────────
+window.addEventListener("scroll", () => {
+  document.getElementById("scrollTopBtn").classList.toggle("visible", window.scrollY > 500);
+}, { passive: true });
 
 // ── Init ──────────────────────────────────────────────────────────────
 if (localStorage.getItem("kwCollapsed") === "0") {
