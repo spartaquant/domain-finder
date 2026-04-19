@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f1a" />
   <title>Domain Finder</title>
   <style>
     /* ── Reset & Base ─────────────────────────────────────── */
@@ -46,16 +47,27 @@
 
     header {
       display: flex; align-items: center; gap: 1rem;
-      margin-bottom: 2rem;
+      margin-bottom: 2rem; flex-wrap: wrap;
+      padding-bottom: 1.5rem; position: relative;
+    }
+    header::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), #a855f7, transparent);
     }
     header .logo {
-      width: 40px; height: 40px; border-radius: 10px;
+      width: 48px; height: 48px; border-radius: 12px;
       background: linear-gradient(135deg, var(--accent), #a855f7);
       display: grid; place-items: center;
-      font-weight: 800; font-size: 1.1rem; color: #fff;
+      font-weight: 800; font-size: 1.3rem; color: #fff;
+      box-shadow: 0 0 20px var(--glow);
     }
     header h1 { font-size: 1.5rem; font-weight: 700; }
     header h1 span { color: var(--muted); font-weight: 400; font-size: .9rem; margin-left: .5rem; }
+    header .tagline {
+      width: 100%; font-size: .85rem; color: var(--muted);
+      margin-top: -.25rem;
+    }
 
     /* ── Cards ─────────────────────────────────────────────── */
     .card {
@@ -313,6 +325,7 @@
   <header>
     <div class="logo">D</div>
     <h1>Domain Finder <span>by keyword combos</span></h1>
+    <p class="tagline">Generate .com combinations and check availability</p>
   </header>
 
   <!-- Keywords Card -->
