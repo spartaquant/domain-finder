@@ -11,8 +11,10 @@
       --bg: #0b0f1a;
       --surface: #111827;
       --surface2: #1a2234;
-      --border: #1e2d45;
+      --surface3: #0f1629;
+      --border: #1c2b42;
       --text: #e2e8f0;
+      --glow: rgba(99,102,241,.25);
       --muted: #8896ab;
       --accent: #6366f1;
       --accent-glow: #818cf8;
@@ -28,12 +30,16 @@
     }
     body {
       font-family: var(--font);
-      background: var(--bg);
+      background: radial-gradient(ellipse at top, #111827 0%, var(--bg) 70%) fixed;
       color: var(--text);
+      font-size: .9rem;
       line-height: 1.5;
       min-height: 100vh;
     }
     a { color: var(--accent-glow); text-decoration: none; }
+    .btn, .filter-chip, .kw-tag, .icon-btn {
+      transition: border .2s, background .2s, color .2s, box-shadow .2s;
+    }
 
     /* ── Layout ────────────────────────────────────────────── */
     .app { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
