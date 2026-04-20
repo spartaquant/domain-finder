@@ -1,0 +1,36 @@
+No RUN.md found — auto-detecting project type…
+Detected: image=python:3.12-slim, install=pip install -r requirements.txt, start=uvicorn app:app --host 0.0.0.0 --port 8000, port=8000
+Generating Dockerfile — image=python:3.12-slim, install=pip install -r requirements.txt, port=8000
+Building image…
+Step 1/10 : FROM alpine:latest AS clone
+ ---> 5b10f432ef3d
+Step 2/10 : RUN apk add --no-cache git
+ ---> Using cache
+ ---> c975a8f66c5a
+Step 3/10 : ARG CLONE_URL
+ ---> Using cache
+ ---> 7a02d5d4c62d
+Step 4/10 : RUN git clone --depth 1 --branch main "$CLONE_URL" /src
+ ---> Using cache
+ ---> c306b283db06
+Step 5/10 : FROM python:3.12-slim
+ ---> 804ddf3251a6
+Step 6/10 : WORKDIR /app
+ ---> Using cache
+ ---> 1de0b4a62f8b
+Step 7/10 : COPY --from=clone /src/ /app/
+ ---> Using cache
+ ---> 7d3f1f66c4b1
+Step 8/10 : RUN pip install -r requirements.txt
+ ---> Using cache
+ ---> 27f4db52ad68
+Step 9/10 : EXPOSE 8000
+ ---> Using cache
+ ---> 32e06da35b88
+Step 10/10 : CMD uvicorn app:app --host 0.0.0.0 --port 8000
+ ---> Using cache
+ ---> 522f15f432ba
+Successfully built 522f15f432ba
+Successfully tagged spartanode-deploy-dep_1351cc6cf2aa43aeb83ad0:latest
+Image built successfully
+ERROR: (HTTP code 404) no such container - No such image: node:22-slim 
