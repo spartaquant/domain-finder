@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,6 +25,44 @@
       --radius: 10px;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --row-border: rgba(30,45,69,.5);
+      --row-hover: rgba(99,102,241,.05);
+      --dropdown-shadow: rgba(0,0,0,.5);
+      --ms-tag-bg: rgba(99,102,241,.15);
+      --ms-tag-border: rgba(99,102,241,.3);
+      --ms-highlight: rgba(99,102,241,.15);
+      --kw-match-bg: rgba(251,191,36,.15);
+      --kw-match-shadow: rgba(251,191,36,.3);
+      --register-bg: rgba(249,115,22,.12);
+      --register-border: rgba(249,115,22,.35);
+      --register-hover-bg: rgba(249,115,22,.2);
+    }
+    [data-theme="light"] {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface2: #edf0f5;
+      --border: #d1d9e6;
+      --text: #1a202c;
+      --muted: #64748b;
+      --accent: #4f46e5;
+      --accent-glow: #6366f1;
+      --green: #16a34a;
+      --green-bg: rgba(22,163,74,.10);
+      --red: #dc2626;
+      --red-bg: rgba(220,38,38,.08);
+      --yellow: #ca8a04;
+      --yellow-bg: rgba(202,138,4,.10);
+      --row-border: rgba(209,217,230,.6);
+      --row-hover: rgba(79,70,229,.06);
+      --dropdown-shadow: rgba(0,0,0,.12);
+      --ms-tag-bg: rgba(79,70,229,.10);
+      --ms-tag-border: rgba(79,70,229,.25);
+      --ms-highlight: rgba(79,70,229,.10);
+      --kw-match-bg: rgba(202,138,4,.12);
+      --kw-match-shadow: rgba(202,138,4,.25);
+      --register-bg: rgba(249,115,22,.08);
+      --register-border: rgba(249,115,22,.30);
+      --register-hover-bg: rgba(249,115,22,.15);
     }
     body {
       font-family: var(--font);
@@ -80,10 +118,10 @@
     }
     .kw-tag:hover .remove { opacity: 1; color: var(--red); }
     .kw-tag.kw-match {
-      background: rgba(251,191,36,.15);
+      background: var(--kw-match-bg);
       border-color: var(--yellow);
       color: var(--yellow);
-      box-shadow: 0 0 0 1px rgba(251,191,36,.3);
+      box-shadow: 0 0 0 1px var(--kw-match-shadow);
     }
     .kw-tag.kw-dim { opacity: .25; }
 
@@ -173,10 +211,10 @@
     thead th:hover { color: var(--text); }
     thead th .sort-arrow { margin-left: .3rem; font-size: .65rem; }
     tbody tr {
-      border-bottom: 1px solid rgba(30,45,69,.5);
+      border-bottom: 1px solid var(--row-border);
       transition: background .1s;
     }
-    tbody tr:hover { background: rgba(99,102,241,.05); }
+    tbody tr:hover { background: var(--row-hover); }
     td { padding: .55rem .75rem; white-space: nowrap; }
     td.domain-name {
       font-family: var(--mono); font-weight: 600; font-size: .9rem;
@@ -222,8 +260,8 @@
       font-family: inherit;
     }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent-glow); }
-    .icon-btn.primary { background: rgba(249,115,22,.12); border-color: rgba(249,115,22,.35); color: #fb923c; }
-    .icon-btn.primary:hover { background: rgba(249,115,22,.2); border-color: #fb923c; }
+    .icon-btn.primary { background: var(--register-bg); border-color: var(--register-border); color: #fb923c; }
+    .icon-btn.primary:hover { background: var(--register-hover-bg); border-color: #fb923c; }
     .icon-btn svg { width: 12px; height: 12px; }
     .copied-flash { color: var(--green) !important; }
 
@@ -245,7 +283,7 @@
     .ms-placeholder { color: var(--muted); padding: 0 .25rem; }
     .ms-tag {
       display: inline-flex; align-items: center; gap: .3rem;
-      background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.3);
+      background: var(--ms-tag-bg); border: 1px solid var(--ms-tag-border);
       color: var(--accent-glow);
       padding: .15rem .45rem; border-radius: 5px; font-size: .78rem;
       font-weight: 500;
@@ -266,7 +304,7 @@
       min-width: 240px; z-index: 100;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 8px; padding: .35rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      box-shadow: 0 10px 30px var(--dropdown-shadow);
     }
     .ms-dropdown.active { display: block; }
     .ms-options {
@@ -277,7 +315,7 @@
       font-size: .85rem; color: var(--text);
       transition: background .1s;
     }
-    .ms-option:hover, .ms-option.highlighted { background: rgba(99,102,241,.15); color: var(--accent-glow); }
+    .ms-option:hover, .ms-option.highlighted { background: var(--ms-highlight); color: var(--accent-glow); }
     .ms-option.selected { opacity: .4; pointer-events: none; }
     .ms-empty { padding: 1rem; text-align: center; color: var(--muted); font-size: .82rem; }
 
@@ -290,6 +328,18 @@
     }
     .counter-item strong { color: var(--text); font-size: 1rem; }
 
+    /* ── Theme Toggle ──────────────────────────────────────── */
+    .theme-toggle {
+      margin-left: auto;
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer;
+      display: grid; place-items: center;
+      transition: .2s;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+    .theme-toggle svg { width: 18px; height: 18px; }
+
     /* ── Responsive ────────────────────────────────────────── */
     @media (max-width: 768px) {
       .app { padding: 1rem; }
@@ -297,6 +347,9 @@
       .kw-input-row { flex-direction: column; }
     }
   </style>
+  <script>
+    (function(){var t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 </head>
@@ -307,6 +360,10 @@
   <header>
     <div class="logo">D</div>
     <h1>Domain Finder <span>by keyword combos</span></h1>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark theme">
+      <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
   </header>
 
   <!-- Keywords Card -->
@@ -916,6 +973,23 @@ function scheduleRender() {
     renderTable();
   });
 }
+
+// ── Theme Toggle ─────────────────────────────────────────────────────
+function updateThemeIcon() {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  document.getElementById('themeIconSun').style.display = isDark ? '' : 'none';
+  document.getElementById('themeIconMoon').style.display = isDark ? 'none' : '';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeIcon();
+}
+
+updateThemeIcon();
 
 // ── Init ──────────────────────────────────────────────────────────────
 renderKeywords();
