@@ -1,0 +1,22 @@
+# Project Development Context
+
+Below is the current state of all tasks in this project's development Gantt chart.
+Use this context to avoid duplicating existing work, understand dependencies,
+and scope your plan appropriately.
+
+## Tasks
+
+- [READY-TO-SHIP] improve design (7/7 steps)
+- [READY-TO-SHIP] let's implement a light theme (2/2 steps)
+- [PLANNED] improve light theme
+- **[IDEA] Generate CLAUDE.md** ← YOU ARE PLANNING THIS TASK
+- [READY-TO-SHIP] improve design (6/6 steps)
+- [READY-TO-SHIP] improve design (0/5 steps)
+- [READY-TO-SHIP] improve design (0/6 steps)
+- [FAILED] the reset button should reset all the prefilled keyword displayed at load. Pleas (1/2 steps)
+- [READY-TO-SHIP] improve design (6/6 steps)
+- [PLANNED] Create CLAUDE.md
+- [PLANNED] Create CLAUDE.md
+
+When planning, consider what has already been done or is in progress.
+Do not re-implement features that are already completed by other tasks.
