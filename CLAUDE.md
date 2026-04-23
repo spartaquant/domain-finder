@@ -81,3 +81,22 @@ Each **candidate item** inside a `batch` has the shape:
 | `source` | `"cache" \| "live"`                                 | Whether the status came from `domain_status_cache.json` or a live RDAP lookup.     |
 
 The cache is read once at the start of the request, then updated in-memory as live lookups complete; it is flushed to disk every 50 results and once more at the end.
+
+## Code conventions
+
+These are patterns **observed in the current code**, not rules enforced by tooling. Preserve them unless the task explicitly requires otherwise.
+
+- **Single-module backend.** All backend logic lives in `app.py`. Config constants (`RDAP_URL`, `APP_DIR`, `CACHE_FILE`, `MIN_LEN`, `MAX_LEN`, `REQUEST_TIMEOUT`, `CONCURRENCY = 50`, `BATCH_SIZE = 20`, `DEFAULT_KEYWORDS`) sit at the top of the file. Resist splitting into multiple modules or packages unless the task explicitly calls for it.
+- **Async I/O with bounded concurrency.** Live RDAP lookups are issued through a shared `aiohttp.ClientSession` and gated by `asyncio.Semaphore(CONCURRENCY)`. A separate `asyncio.Lock` guards shared mutable state (the `cache` dict, the `pending_batch` list, the `checked` counter); a third `send_lock` serialises `ws.send_json` calls. Keep this pattern when adding new async work — don't drop the semaphore or introduce unprotected shared state.
+- **Single-file frontend.** `static/index.html` contains the full UI: markup, inline `<style>` CSS, and inline `<script>` JS — no external assets, no build step, no bundler. Resist adding a build pipeline, a framework, or a separate CSS/JS file.
+- **Theming via CSS custom properties + `data-theme`.** Colours are declared as CSS variables on `:root` (dark defaults) and overridden under `[data-theme="light"]`. The attribute is set on `<html>` from `localStorage` on page load and toggled by a theme button. New styling should read from these variables rather than hard-coding colours.
+- **Keyword normalisation.** `normalize_keywords()` lowercases input, strips non-alphanumerics, and deduplicates while preserving order. `is_reasonable_name()` rejects names outside `[MIN_LEN, MAX_LEN]`, non-alphanumeric names, and names with any character repeated 3+ times in a row. Any new candidate-filtering logic should go through these helpers.
+- **Cache write semantics.** `save_cache()` writes the full JSON blob with `indent=2, sort_keys=True` and swallows write errors with a `[WARN]` print. Preserve the sort/indent so diffs stay readable if the file is ever inspected manually.
+
+## Constraints and architectural decisions
+
+- **RDAP is `.com`-only.** The Verisign endpoint (`https://rdap.verisign.com/com/v1/domain/{}`) is hardcoded. Supporting other TLDs would require routing to different RDAP servers — not a drop-in change.
+- **Cache is a runtime JSON file.** `domain_status_cache.json` is written in the project directory at runtime, is listed in `.gitignore`, and **must never be committed**. Treat it as disposable state — the app regenerates entries on demand.
+- **Port mismatch is known.** `README.md` and the documented `uvicorn` command use port **4706**; `RUN.md`'s Docker preview config uses port **8000**. This is intentional per-context; do not "fix" one without considering the other.
+- **No test suite, no CI.** There are no automated tests, no linter, no formatter, and no CI configuration. All changes must be verified manually by running the server (`python -m uvicorn app:app --host 0.0.0.0 --port 4706`) and exercising the UI in a browser — generate domains, stream results, toggle filters, toggle the theme.
+- **No database, no auth, no multi-user state.** The app is single-user and single-process. The WebSocket endpoint accepts any connection and runs the full check on demand; cache mutations are not coordinated across processes.
