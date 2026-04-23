@@ -18,10 +18,13 @@
       --accent-glow: #818cf8;
       --green: #34d399;
       --green-bg: rgba(52,211,153,.12);
+      --green-border: rgba(52,211,153,.30);
       --red: #f87171;
       --red-bg: rgba(248,113,113,.08);
+      --red-border: rgba(248,113,113,.30);
       --yellow: #fbbf24;
       --yellow-bg: rgba(251,191,36,.10);
+      --yellow-border: rgba(251,191,36,.30);
       --radius: 10px;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
@@ -49,10 +52,13 @@
       --accent-glow: #6366f1;
       --green: #16a34a;
       --green-bg: rgba(22,163,74,.10);
+      --green-border: rgba(22,163,74,.30);
       --red: #dc2626;
       --red-bg: rgba(220,38,38,.08);
+      --red-border: rgba(220,38,38,.30);
       --yellow: #ca8a04;
       --yellow-bg: rgba(202,138,4,.10);
+      --yellow-border: rgba(202,138,4,.30);
       --row-border: rgba(209,217,230,.6);
       --row-hover: rgba(79,70,229,.06);
       --dropdown-shadow: rgba(0,0,0,.12);
@@ -225,7 +231,7 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
     tbody tr:hover { background: var(--row-hover); }
-    td { padding: .55rem .75rem; white-space: nowrap; }
+    td { padding: .65rem .85rem; white-space: nowrap; }
     td.domain-name {
       font-family: var(--mono); font-weight: 600; font-size: .9rem;
     }
@@ -239,9 +245,9 @@
       padding: .15rem .55rem; border-radius: 20px;
       font-size: .75rem; font-weight: 600;
     }
-    .status-badge.likely_available { background: var(--green-bg); color: var(--green); }
-    .status-badge.registered { background: var(--red-bg); color: var(--red); }
-    .status-badge.unknown { background: var(--yellow-bg); color: var(--yellow); }
+    .status-badge.likely_available { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .status-badge.registered { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+    .status-badge.unknown { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
     .status-badge .dot {
       width: 6px; height: 6px; border-radius: 50%;
       background: currentColor;
@@ -251,7 +257,7 @@
       display: inline-flex; align-items: center; gap: .4rem;
     }
     .score-bar .bar {
-      width: 50px; height: 5px; background: var(--surface2);
+      width: 60px; height: 5px; background: var(--surface2);
       border-radius: 3px; overflow: hidden;
     }
     .score-bar .bar-fill {
