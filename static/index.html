@@ -70,6 +70,7 @@
       color: var(--text);
       line-height: 1.5;
       min-height: 100vh;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
     a { color: var(--accent-glow); text-decoration: none; }
 
@@ -96,6 +97,7 @@
       border-radius: var(--radius);
       padding: 1.25rem 1.5rem;
       margin-bottom: 1.25rem;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
     .card-title {
       font-size: .8rem; font-weight: 600; text-transform: uppercase;
@@ -109,7 +111,7 @@
       background: var(--surface2); border: 1px solid var(--border);
       border-radius: 6px; padding: .25rem .6rem;
       font-size: .8rem; color: var(--text); cursor: default;
-      transition: .15s;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
     .kw-tag:hover { border-color: var(--red); }
     .kw-tag .remove {
@@ -140,7 +142,7 @@
       display: inline-flex; align-items: center; gap: .4rem;
       padding: .55rem 1.1rem; border-radius: 8px; border: none;
       font-size: .85rem; font-weight: 600; cursor: pointer;
-      transition: .2s;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     }
     .btn-primary {
       background: var(--accent); color: #fff;
@@ -180,7 +182,8 @@
     .filter-chip {
       padding: .3rem .75rem; border-radius: 20px; font-size: .78rem;
       border: 1px solid var(--border); background: var(--surface2);
-      color: var(--muted); cursor: pointer; transition: .15s;
+      color: var(--muted); cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
       font-weight: 500;
     }
     .filter-chip:hover { border-color: var(--accent); color: var(--text); }
@@ -212,7 +215,7 @@
     thead th .sort-arrow { margin-left: .3rem; font-size: .65rem; }
     tbody tr {
       border-bottom: 1px solid var(--row-border);
-      transition: background .1s;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
     tbody tr:hover { background: var(--row-hover); }
     td { padding: .55rem .75rem; white-space: nowrap; }
@@ -277,7 +280,7 @@
       background: var(--surface2); border: 1px solid var(--border);
       border-radius: 8px; padding: .35rem .5rem; min-height: 38px;
       color: var(--text); font-size: .82rem; cursor: text;
-      font-family: inherit; outline: none; transition: border .15s;
+      font-family: inherit; outline: none; transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
     .ms-trigger:hover, .ms-trigger.focused { border-color: var(--accent); }
     .ms-placeholder { color: var(--muted); padding: 0 .25rem; }
