@@ -36,6 +36,7 @@
       --register-bg: rgba(249,115,22,.12);
       --register-border: rgba(249,115,22,.35);
       --register-hover-bg: rgba(249,115,22,.2);
+      --card-shadow: rgba(0,0,0,0) 0 2px 8px;
     }
     [data-theme="light"] {
       --bg: #eef2f7;
@@ -63,6 +64,7 @@
       --register-bg: rgba(249,115,22,.08);
       --register-border: rgba(249,115,22,.30);
       --register-hover-bg: rgba(249,115,22,.15);
+      --card-shadow: rgba(0,0,0,0.07) 0 2px 8px;
     }
     body {
       font-family: var(--font);
@@ -97,7 +99,8 @@
       border-radius: var(--radius);
       padding: 1.25rem 1.5rem;
       margin-bottom: 1.25rem;
-      transition: background-color 0.2s ease, border-color 0.2s ease;
+      box-shadow: var(--card-shadow);
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .card-title {
       font-size: .8rem; font-weight: 600; text-transform: uppercase;
